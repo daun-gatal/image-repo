@@ -5,6 +5,7 @@ stages:
 # Include all subdir pipelines (each service has its own .gitlab-ci.yml)
 include:
   - local: 'airflow/.gitlab-ci.yml'
+  - local: 'pyspark/.gitlab-ci.yml'
 
 dummy_job:
   stage: dummy
