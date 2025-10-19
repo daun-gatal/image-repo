@@ -1,7 +1,7 @@
 # ===============================
 # Stage 1: Builder
 # ===============================
-FROM apache/airflow:3.0.6 AS builder
+FROM docker.io/apache/airflow:3.0.6 AS builder
 
 USER root
 
@@ -18,7 +18,7 @@ RUN pip install --user --no-cache-dir apache-airflow-providers-apache-kafka
 # ===============================
 # Stage 2: Final Image
 # ===============================
-FROM apache/airflow:3.0.6
+FROM docker.io/apache/airflow:3.0.6
 
 USER root
 
