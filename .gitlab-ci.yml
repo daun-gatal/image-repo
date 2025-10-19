@@ -13,6 +13,16 @@ dummy_job:
   script:
     - echo "Running dummy job because specific files did NOT change"
   rules:
-    - when: always
+    # 1️⃣ Run during merge request pipelines
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
+      when: always
+
+    # 2️⃣ Run after the MR is merged into main (or your target branch)
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"'
+      when: always
+
+    # Default: never run outside MR or merge
+    - when: never
+
   tags:
     - k8s
