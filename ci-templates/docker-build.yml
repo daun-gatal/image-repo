@@ -1,9 +1,8 @@
-# ==========================================================
-# BUILD TEMPLATE (using Buildah)
-# ==========================================================
+# Build template using Buildah
 .build_template:
   image:
     name: quay.io/buildah/stable:latest
+    entrypoint: [""]   # important — prevents /bin/sh wrapping
   stage: build
 
   variables:
@@ -16,7 +15,11 @@
     - export IMAGE_TAG=$(date -u +"%Y%m%d%H%M")
     - echo "Building image for subdir: $SUBDIR"
     - echo "Tag: $IMAGE_TAG"
-    - buildah bud --storage-driver=$STORAGE_DRIVER --tls-verify=false --authfile=$REGISTRY_AUTH_FILE --file "${CI_PROJECT_DIR}/${SUBDIR}/Dockerfile" --tag "${CI_REGISTRY_IMAGE}:${SUBDIR}-${IMAGE_TAG}" --tag "${CI_REGISTRY_IMAGE}:${SUBDIR}-latest" "${CI_PROJECT_DIR}/${SUBDIR}"
+    - buildah bud --storage-driver=$STORAGE_DRIVER --tls-verify=false --authfile=$REGISTRY_AUTH_FILE \
+        --file "${CI_PROJECT_DIR}/${SUBDIR}/Dockerfile" \
+        --tag "${CI_REGISTRY_IMAGE}:${SUBDIR}-${IMAGE_TAG}" \
+        --tag "${CI_REGISTRY_IMAGE}:${SUBDIR}-latest" \
+        "${CI_PROJECT_DIR}/${SUBDIR}"
     - buildah push --tls-verify=false --authfile=$REGISTRY_AUTH_FILE "${CI_REGISTRY_IMAGE}:${SUBDIR}-${IMAGE_TAG}"
     - buildah push --tls-verify=false --authfile=$REGISTRY_AUTH_FILE "${CI_REGISTRY_IMAGE}:${SUBDIR}-latest"
 
