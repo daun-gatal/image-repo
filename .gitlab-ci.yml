@@ -1,25 +1,28 @@
-.build_template:
-  stage: build
-  image: quay.io/buildah/stable
-  variables:
-    STORAGE_DRIVER: vfs
-    BUILDAH_FORMAT: docker
+stages:
+  - dummy
+  - build
 
-  before_script:
-    # Log in to GitLab container registry
-    - echo "$CI_REGISTRY_PASSWORD" | buildah login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
+# Include all subdir pipelines (each service has its own .gitlab-ci.yml)
+include:
+  - local: 'airflow/.gitlab-ci.yml'
 
+dummy_job:
+  stage: dummy
+  image: alpine:latest
+  before_script: []
   script:
-    # Generate tag and image name
-    - export IMAGE_TAG=$(date -u +"%Y%m%d%H%M")
-    - export IMAGE_NAME="${CI_REGISTRY_IMAGE}/${SUBDIR}"
-    - echo "🔧 Building $IMAGE_NAME with tag: $IMAGE_TAG"
+    - echo "Running dummy job because specific files did NOT change"
+  rules:
+    # 1️⃣ Run during merge request pipelines
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
+      when: always
 
-    # Build image from subdir Dockerfile
-    - buildah build -t "${IMAGE_NAME}:${IMAGE_TAG}" -t "${IMAGE_NAME}:latest" "${CI_PROJECT_DIR}/${SUBDIR}"
+    # 2️⃣ Run after the MR is merged into main (or your target branch)
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"'
+      when: always
 
-    # Push both tags
-    - buildah push "${IMAGE_NAME}:${IMAGE_TAG}"
-    - buildah push "${IMAGE_NAME}:latest"
+    # Default: never run outside MR or merge
+    - when: never
+
   tags:
     - k8s
