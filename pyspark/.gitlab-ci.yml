@@ -11,5 +11,6 @@ build_pyspark:
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "main"'
       changes: 
         - pyspark/Dockerfile
+        - pyspark/scripts/**
       when: always
     - when: never
