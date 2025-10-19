@@ -1,0 +1,6 @@
+stages:
+  - build
+
+# Include all subdir pipelines (each service has its own .gitlab-ci.yml)
+include:
+  - local: 'airflow/.gitlab-ci.yml'
