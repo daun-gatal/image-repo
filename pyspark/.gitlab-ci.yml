@@ -9,5 +9,7 @@ build_pyspark:
   rules:
     # Run only after merge (push to main)
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "main"'
+      changes: 
+        - pyspark/Dockerfile
       when: always
     - when: never
