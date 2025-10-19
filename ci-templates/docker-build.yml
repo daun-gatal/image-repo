@@ -1,40 +1,24 @@
 .build_template:
-  image:
-    name: gcr.io/kaniko-project/executor:latest
-    entrypoint: [""]
   stage: build
-
+  image: quay.io/buildah/stable
   variables:
-    DOCKER_CONFIG: /kaniko/.docker/
+    STORAGE_DRIVER: vfs
+    BUILDAH_FORMAT: docker
+
+  before_script:
+    # Log in to GitLab container registry
+    - echo "$CI_REGISTRY_PASSWORD" | buildah login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
 
   script:
-    # Configure Docker auth for Kaniko
-    - mkdir -p /kaniko/.docker
-    - |
-      cat > /kaniko/.docker/config.json <<EOF
-      {
-        "auths": {
-          "$CI_REGISTRY": {
-            "username": "$CI_REGISTRY_USER",
-            "password": "$CI_REGISTRY_PASSWORD"
-          }
-        }
-      }
-      EOF
-
-    # Generate timestamp tag (UTC)
+    # Generate tag and image name
     - export IMAGE_TAG=$(date -u +"%Y%m%d%H%M")
+    - export IMAGE_NAME="${CI_REGISTRY_IMAGE}/${SUBDIR}"
 
-    # Run Kaniko build
-    - /kaniko/executor
-        --context ./$SUBDIR
-        --dockerfile ./$SUBDIR/Dockerfile
-        --destination $CI_REGISTRY_IMAGE:$SUBDIR-$IMAGE_TAG
-        --destination $CI_REGISTRY_IMAGE:$SUBDIR-latest
-        --snapshotMode=redo
-        --single-snapshot
-        --use-new-run
-        --reproducible
+    # Build image from subdir Dockerfile
+    - buildah build -t "${IMAGE_NAME}:${IMAGE_TAG}" -t "${IMAGE_NAME}:latest" "${CI_PROJECT_DIR}/${SUBDIR}"
 
+    # Push both tags
+    - buildah push "${IMAGE_NAME}:${IMAGE_TAG}"
+    - buildah push "${IMAGE_NAME}:latest"
   tags:
     - k8s
