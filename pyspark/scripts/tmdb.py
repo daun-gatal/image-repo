@@ -12,7 +12,7 @@ try:
             "kafka-kafka-bootstrap.kafka.svc.cluster.local:9092",
         )
         .option("subscribe", "tmdb")
-        .option("startingOffsets", "latest")
+        .option("startingOffsets", "earliest")
         .load()
     )
 
