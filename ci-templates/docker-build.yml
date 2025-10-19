@@ -1,16 +1,40 @@
 .build_template:
-  image: docker:24.0.7
-  services:
-    - docker:24.0.7-dind
-  variables:
-    DOCKER_DRIVER: overlay2
-    DOCKER_TLS_CERTDIR: ""
+  image:
+    name: gcr.io/kaniko-project/executor:latest
+    entrypoint: [""]
   stage: build
+
+  variables:
+    DOCKER_CONFIG: /kaniko/.docker/
+
   script:
-    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
-    - export IMAGE_TAG=$(date -u +"%Y%m%d%H%M%S")
-    - docker build -f $SUBDIR/Dockerfile -t "$CI_REGISTRY_IMAGE:$SUBDIR-$IMAGE_TAG" -t "$CI_REGISTRY_IMAGE:$SUBDIR-latest" ./$SUBDIR
-    - docker push "$CI_REGISTRY_IMAGE:$SUBDIR-$IMAGE_TAG"
-    - docker push "$CI_REGISTRY_IMAGE:$SUBDIR-latest"
+    # Configure Docker auth for Kaniko
+    - mkdir -p /kaniko/.docker
+    - |
+      cat > /kaniko/.docker/config.json <<EOF
+      {
+        "auths": {
+          "$CI_REGISTRY": {
+            "username": "$CI_REGISTRY_USER",
+            "password": "$CI_REGISTRY_PASSWORD"
+          }
+        }
+      }
+      EOF
+
+    # Generate timestamp tag (UTC)
+    - export IMAGE_TAG=$(date -u +"%Y%m%d%H%M")
+
+    # Run Kaniko build
+    - /kaniko/executor
+        --context ./$SUBDIR
+        --dockerfile ./$SUBDIR/Dockerfile
+        --destination $CI_REGISTRY_IMAGE:$SUBDIR-$IMAGE_TAG
+        --destination $CI_REGISTRY_IMAGE:$SUBDIR-latest
+        --snapshotMode=redo
+        --single-snapshot
+        --use-new-run
+        --reproducible
+
   tags:
     - k8s
