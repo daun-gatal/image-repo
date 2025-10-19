@@ -1,0 +1,16 @@
+.build_template:
+  image: docker:24.0.7
+  services:
+    - docker:24.0.7-dind
+  variables:
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+  stage: build
+  script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+    - export IMAGE_TAG=$(date -u +"%Y%m%d%H%M%S")
+    - docker build -f $SUBDIR/Dockerfile -t "$CI_REGISTRY_IMAGE:$SUBDIR-$IMAGE_TAG" -t "$CI_REGISTRY_IMAGE:$SUBDIR-latest" ./$SUBDIR
+    - docker push "$CI_REGISTRY_IMAGE:$SUBDIR-$IMAGE_TAG"
+    - docker push "$CI_REGISTRY_IMAGE:$SUBDIR-latest"
+  tags:
+    - k8s
