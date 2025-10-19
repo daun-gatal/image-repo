@@ -1,6 +1,18 @@
 stages:
+  - dummy
   - build
 
 # Include all subdir pipelines (each service has its own .gitlab-ci.yml)
 include:
   - local: 'airflow/.gitlab-ci.yml'
+
+dummy_job:
+  stage: dummy
+  image: alpine:latest
+  before_script: []
+  script:
+    - echo "Running dummy job because specific files did NOT change"
+  rules:
+    - when: always
+  tags:
+    - k8s
