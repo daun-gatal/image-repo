@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 USER airflow
 
 # Install extra Python packages into a temp directory
-RUN pip install --user --no-cache-dir apache-airflow-providers-apache-kafka
+RUN pip install --no-cache-dir apache-airflow-providers-apache-kafka
 
 # ===============================
 # Stage 2: Final Image
