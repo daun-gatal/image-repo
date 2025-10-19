@@ -1,5 +1,5 @@
 # Use the official Apache Spark 4.0.1 Python image
-FROM apache/spark-py:4.0.1
+FROM docker.io/apache/spark:4.0.1
 
 # Set environment variables
 ENV SPARK_HOME=/opt/spark
