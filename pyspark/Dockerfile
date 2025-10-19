@@ -30,7 +30,11 @@ RUN curl -L -o ${SPARK_HOME}/jars/hadoop-aws-3.4.1.jar \
     curl -L -o ${SPARK_HOME}/jars/kafka-clients-4.0.1.jar \
       https://repo1.maven.org/maven2/org/apache/kafka/kafka-clients/4.0.1/kafka-clients-4.0.1.jar && \
     curl -L -o ${SPARK_HOME}/jars/commons-pool2-2.12.0.jar \
-      https://repo1.maven.org/maven2/org/apache/commons/commons-pool2/2.12.0/commons-pool2-2.12.0.jar
+      https://repo1.maven.org/maven2/org/apache/commons/commons-pool2/2.12.0/commons-pool2-2.12.0.jar && \
+    curl -L -o ${SPARK_HOME}/jars/spark-streaming-kafka-0-10_2.13-4.0.1.jar \
+      https://repo1.maven.org/maven2/org/apache/spark/spark-streaming-kafka-0-10_2.13/4.0.1/spark-streaming-kafka-0-10_2.13-4.0.1.jar && \
+    curl -L -o ${SPARK_HOME}/jars/spark-token-provider-kafka-0-10_2.13-4.0.1.jar \
+      https://repo1.maven.org/maven2/org/apache/spark/spark-token-provider-kafka-0-10_2.13/4.0.1/spark-token-provider-kafka-0-10_2.13-4.0.1.jar
 
 # Switch back to Spark user (UID 185)
 USER 185
