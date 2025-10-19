@@ -1,50 +1,37 @@
 .build_template:
   image:
     name: quay.io/buildah/stable:latest
-    entrypoint: [""]   # prevent GitLab from wrapping the script in /bin/sh
   stage: build
 
   variables:
-    STORAGE_DRIVER: vfs   # for rootless builds
+    STORAGE_DRIVER: vfs   # rootless mode
     BUILDAH_FORMAT: docker
     REGISTRY_AUTH_FILE: /tmp/auth.json
 
   script:
-    # Create registry auth JSON
-    - >
-      echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}"
-      > $REGISTRY_AUTH_FILE
-
-    # Generate timestamp tag (UTC)
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > $REGISTRY_AUTH_FILE
     - export IMAGE_TAG=$(date -u +"%Y%m%d%H%M")
-
-    # Debug info
     - echo "Building image for subdir: $SUBDIR"
     - echo "Tag: $IMAGE_TAG"
-
-    # Run buildah build
-    - >
-      buildah bud
-      --storage-driver=$STORAGE_DRIVER
-      --tls-verify=false
-      --authfile=$REGISTRY_AUTH_FILE
-      --file "${CI_PROJECT_DIR}/${SUBDIR}/Dockerfile"
-      --tag "${CI_REGISTRY_IMAGE}:${SUBDIR}-${IMAGE_TAG}"
-      --tag "${CI_REGISTRY_IMAGE}:${SUBDIR}-latest"
-      "${CI_PROJECT_DIR}/${SUBDIR}"
-
-    # Push both tags
-    - >
-      buildah push
-      --tls-verify=false
-      --authfile=$REGISTRY_AUTH_FILE
-      "${CI_REGISTRY_IMAGE}:${SUBDIR}-${IMAGE_TAG}"
-
-    - >
-      buildah push
-      --tls-verify=false
-      --authfile=$REGISTRY_AUTH_FILE
-      "${CI_REGISTRY_IMAGE}:${SUBDIR}-latest"
+    - |
+      buildah bud \
+        --storage-driver=$STORAGE_DRIVER \
+        --tls-verify=false \
+        --authfile=$REGISTRY_AUTH_FILE \
+        --file "${CI_PROJECT_DIR}/${SUBDIR}/Dockerfile" \
+        --tag "${CI_REGISTRY_IMAGE}:${SUBDIR}-${IMAGE_TAG}" \
+        --tag "${CI_REGISTRY_IMAGE}:${SUBDIR}-latest" \
+        "${CI_PROJECT_DIR}/${SUBDIR}"
+    - |
+      buildah push \
+        --tls-verify=false \
+        --authfile=$REGISTRY_AUTH_FILE \
+        "${CI_REGISTRY_IMAGE}:${SUBDIR}-${IMAGE_TAG}"
+    - |
+      buildah push \
+        --tls-verify=false \
+        --authfile=$REGISTRY_AUTH_FILE \
+        "${CI_REGISTRY_IMAGE}:${SUBDIR}-latest"
 
   tags:
     - k8s
