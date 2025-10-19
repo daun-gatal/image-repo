@@ -1,4 +1,4 @@
-.buildah_template:
+.build_template:
   stage: build
   image: quay.io/buildah/stable
   variables:
