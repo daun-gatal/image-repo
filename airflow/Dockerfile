@@ -32,3 +32,5 @@ USER airflow
 
 # Optional: verify installation
 RUN airflow providers list
+
+# Add comments about the image
