@@ -13,7 +13,6 @@
     # Generate tag and image name
     - export IMAGE_TAG=$(date -u +"%Y%m%d%H%M")
     - export IMAGE_NAME="${CI_REGISTRY_IMAGE}/${SUBDIR}"
-    - echo "🔧 Building $IMAGE_NAME with tag: $IMAGE_TAG"
 
     # Build image from subdir Dockerfile
     - buildah build -t "${IMAGE_NAME}:${IMAGE_TAG}" -t "${IMAGE_NAME}:latest" "${CI_PROJECT_DIR}/${SUBDIR}"
