@@ -4,7 +4,7 @@ FROM docker.io/apache/spark:4.0.1-python3
 # Switch to root to install packages
 USER root
 
-# Install curl (used to download JARs)
+# Install curl (used to download JAR)
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 # Set environment variables

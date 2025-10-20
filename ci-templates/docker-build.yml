@@ -19,5 +19,5 @@
     # Push both tags
     - buildah push "${IMAGE_NAME}:${TAG_VERSION}"
     - buildah push "${IMAGE_NAME}:latest"
-  tags:
-    - k8s
+  # tags:
+  #   - k8s
