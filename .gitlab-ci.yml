@@ -9,7 +9,7 @@ include:
 
 dummy_job:
   stage: dummy
-  image: alpine:latest
+  image: ubuntu:22.04
   before_script: []
   script:
     - echo "Running dummy job because specific files did NOT change"

@@ -56,6 +56,20 @@ try:
     """
     )
 
+    # Configure expiration properties for the table (run once at setup)
+    spark.sql(
+        """
+        ALTER TABLE datalake.tmdb.movies 
+        SET TBLPROPERTIES (
+            'history.expire.max-snapshot-age-ms' = '604800000',
+            'history.expire.min-snapshots-to-keep' = '5',
+            'write.metadata.delete-after-commit.enabled' = 'true',
+            'write.metadata.previous-versions-max' = '5'
+        )
+    """
+    )
+    print("Expiration properties configured...")
+
     movie_schema = StructType(
         [
             StructField("adult", BooleanType()),
