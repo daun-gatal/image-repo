@@ -8,7 +8,8 @@ USER root
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 # Install PySpark 4.0.1 for Python
-RUN pip install --no-cache-dir pyspark==4.0.1 pandas>=2.0.0 pyarrow>=14.0.0
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Set environment variables
 ENV SPARK_HOME=/opt/spark
