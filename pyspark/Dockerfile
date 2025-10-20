@@ -1,5 +1,5 @@
 # Use Apache Spark 4.0.1 Python image
-FROM docker.io/apache/spark:4.0.1
+FROM docker.io/apache/spark:4.0.1-python3
 
 # Switch to root to install packages
 USER root
