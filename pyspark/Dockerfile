@@ -34,7 +34,9 @@ RUN curl -L -o ${SPARK_HOME}/jars/hadoop-aws-3.4.1.jar \
     curl -L -o ${SPARK_HOME}/jars/spark-streaming-kafka-0-10_2.13-4.0.1.jar \
       https://repo1.maven.org/maven2/org/apache/spark/spark-streaming-kafka-0-10_2.13/4.0.1/spark-streaming-kafka-0-10_2.13-4.0.1.jar && \
     curl -L -o ${SPARK_HOME}/jars/spark-token-provider-kafka-0-10_2.13-4.0.1.jar \
-      https://repo1.maven.org/maven2/org/apache/spark/spark-token-provider-kafka-0-10_2.13/4.0.1/spark-token-provider-kafka-0-10_2.13-4.0.1.jar
+      https://repo1.maven.org/maven2/org/apache/spark/spark-token-provider-kafka-0-10_2.13/4.0.1/spark-token-provider-kafka-0-10_2.13-4.0.1.jar && \
+    curl -L -o ${SPARK_HOME}/jars/iceberg-aws-bundle-1.10.0.jar \
+      https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-aws-bundle/1.10.0/iceberg-aws-bundle-1.10.0.jar
 
 # Switch back to Spark user (UID 185)
 USER 185
