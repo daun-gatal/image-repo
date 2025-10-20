@@ -11,7 +11,7 @@ try:
 
     spark.sql(
         """
-        CREATE TABLE datalake.tmdb.movies (
+        CREATE TABLE IF NOT EXISTS datalake.tmdb.movies (
             adult BOOLEAN,
             backdrop_path STRING,
             belongs_to_collection STRING,
