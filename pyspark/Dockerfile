@@ -7,6 +7,9 @@ USER root
 # Install curl (used to download JAR)
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
+# Install PySpark 4.0.1 for Python
+RUN pip install --no-cache-dir pyspark==4.0.1
+
 # Set environment variables
 ENV SPARK_HOME=/opt/spark
 ENV PYTHONPATH="${SPARK_HOME}/scripts:${PYTHONPATH}"
