@@ -1,5 +1,5 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import from_json, col, to_date
+from pyspark.sql.functions import from_json, col, to_date, when, lit
 from pyspark.sql.types import *
 
 
@@ -158,7 +158,13 @@ try:
     parsed_df = (
         df.select(from_json(col("value").cast("string"), movie_schema).alias("data"))
         .select("data.*")
-        .withColumn("release_date", to_date(col("release_date")))
+        .withColumn(
+            "release_date",
+            when(
+                col("release_date") != "", to_date(col("release_date"), "yyyy-MM-dd")
+            ).otherwise(lit(None)),
+        )
+        .filter(col("release_date").isNotNull())
     )
 
     query = (
