@@ -151,7 +151,7 @@ try:
             "kafka-kafka-bootstrap.kafka.svc.cluster.local:9092",
         )
         .option("subscribe", "tmdb")
-        .option("startingOffsets", "earliest")
+        .option("startingOffsets", "latest")
         .load()
     )
 
@@ -164,7 +164,6 @@ try:
     query = (
         parsed_df.writeStream.format("iceberg")
         .outputMode("append")
-        .trigger(processingTime="1 minute")  # every 1 minute
         .option("fanout-enabled", "true")  # parallel writers for performance
         .toTable("datalake.tmdb.movies")  # catalog.database.table
     )
