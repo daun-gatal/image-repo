@@ -17,6 +17,7 @@
 
   tags:
     - k8s
+  allow_failure: false
 
 # ======================================
 # Validate Stage
