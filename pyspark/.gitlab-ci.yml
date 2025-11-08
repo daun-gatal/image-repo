@@ -1,16 +1,47 @@
 include:
   - local: 'ci-templates/docker-build.yml'
 
-build_pyspark:
-  extends: .build_template
+# ======================================
+# 🧱 Validate during Merge Request
+# ======================================
+lint_pyspark:
+  extends: .lint_dockerfile
   variables:
     SUBDIR: "pyspark"
-    TAG_VERSION: "4.0.1"
   rules:
-    # Run only after merge (push to main) v1
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "main"'
-      changes: 
+    # Run during Merge Requests when pyspark code changes
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
+      changes:
         - pyspark/Dockerfile
-        - pyspark/scripts/**
+        - pyspark/**/*
+      when: always
+    - when: never
+
+validate_pyspark:
+  extends: .validate_dockerfile
+  variables:
+    SUBDIR: "pyspark"
+  rules:
+    # Run during Merge Requests when pyspark code changes
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
+      changes:
+        - pyspark/Dockerfile
+        - pyspark/**/*
+      when: always
+    - when: never
+
+# ======================================
+# 🚀 Push after merge to main
+# ======================================
+build_and_push_pyspark:
+  extends: .build_and_push_template
+  variables:
+    SUBDIR: "pyspark"
+  rules:
+    # Only run after merge (push to main)
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "main"'
+      changes:
+        - pyspark/Dockerfile
+        - pyspark/**/*
       when: always
     - when: never

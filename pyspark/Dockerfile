@@ -1,5 +1,6 @@
 # Use Apache Spark 4.0.1 Python image
-FROM docker.io/apache/spark:4.0.1-python3
+ARG VERSION
+FROM docker.io/apache/spark:${VERSION}-python3
 
 # Switch to root to install packages
 USER root
@@ -7,8 +8,10 @@ USER root
 # Install curl (used to download JAR)
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
-# Install PySpark 4.0.1 for Python
+# Install PySpark for Python
+ARG VERSION
 COPY requirements.txt .
+RUN pip install --no-cache-dir pyspark==${VERSION}
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Set environment variables
