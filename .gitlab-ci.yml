@@ -1,6 +1,6 @@
 stages:
   - dummy
-  # - lint
+  - lint
   - validate
   - build_and_push
 

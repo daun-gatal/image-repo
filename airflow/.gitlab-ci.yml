@@ -4,18 +4,18 @@ include:
 # ======================================
 # 🧱 Validate during Merge Request
 # ======================================
-# lint_airflow:
-#   extends: .lint_dockerfile
-#   variables:
-#     SUBDIR: "airflow"
-#   rules:
-#     # Run during Merge Requests when airflow code changes
-#     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
-#       changes:
-#         - airflow/Dockerfile
-#         - airflow/**/*
-#       when: always
-#     - when: never
+lint_airflow:
+  extends: .lint_dockerfile
+  variables:
+    SUBDIR: "airflow"
+  rules:
+    # Run during Merge Requests when airflow code changes
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
+      changes:
+        - airflow/Dockerfile
+        - airflow/**/*
+      when: always
+    - when: never
 
 validate_airflow:
   extends: .validate_dockerfile

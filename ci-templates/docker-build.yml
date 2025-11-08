@@ -1,14 +1,26 @@
 # ======================================
-# 🔍 Validate Stage
+# Lint Stage
 # ======================================
-# .lint_dockerfile:
-#   stage: lint
-#   image: hadolint/hadolint:latest
-#   script:
-#     - hadolint "${CI_PROJECT_DIR}/${SUBDIR}/Dockerfile"
-#   tags:
-#     - k8s
+lint_dockerfile:
+  stage: lint
+  image: ubuntu:22.04
 
+  before_script:
+    - apt-get update -y
+    - apt-get install -y wget ca-certificates
+    - wget -qO /usr/local/bin/hadolint https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64
+    - chmod +x /usr/local/bin/hadolint
+
+  script:
+    - echo "🔍 Running Hadolint on Dockerfile..."
+    - hadolint "${CI_PROJECT_DIR}/${SUBDIR}/Dockerfile"
+
+  tags:
+    - k8s
+
+# ======================================
+# Validate Stage
+# ======================================
 .validate_dockerfile:
   stage: validate
   image: quay.io/buildah/stable
@@ -25,7 +37,7 @@
   allow_failure: false
 
 # ======================================
-# 🏗️ Build & Push Stage
+# Build & Push Stage
 # ======================================
 .build_and_push_template:
   stage: build_and_push
@@ -44,11 +56,7 @@
     - echo "🔨 Building ${IMAGE_NAME}:${TAG_VERSION}"
 
     # Build the image with both tags
-    - buildah build \
-        --build-arg VERSION="${TAG_VERSION}" \
-        -t "${IMAGE_NAME}:${TAG_VERSION}" \
-        -t "${IMAGE_NAME}:latest" \
-        "${CI_PROJECT_DIR}/${SUBDIR}"
+    - buildah build --build-arg VERSION="${TAG_VERSION}" -t "${IMAGE_NAME}:${TAG_VERSION}" -t "${IMAGE_NAME}:latest" "${CI_PROJECT_DIR}/${SUBDIR}"
 
     # Push directly to GitLab registry
     - echo "🚀 Pushing ${IMAGE_NAME}:${TAG_VERSION} and :latest"
