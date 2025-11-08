@@ -1,7 +1,7 @@
 # ======================================
 # 🔍 Validate Stage
 # ======================================
-validate_dockerfile:
+.validate_dockerfile:
   stage: validate
   image: quay.io/buildah/stable
   variables:
