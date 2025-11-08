@@ -26,6 +26,8 @@
     paths:
       - image.tar
     expire_in: 1 hour
+  tags:
+    - k8s
 
 # ======================================
 # 🚀 Push Stage
@@ -49,3 +51,5 @@
     - buildah pull "docker-archive:./image.tar"
     - buildah push "${IMAGE_NAME}:${TAG_VERSION}"
     - buildah push "${IMAGE_NAME}:latest"
+  tags:
+    - k8s

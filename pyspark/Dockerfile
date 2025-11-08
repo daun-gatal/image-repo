@@ -9,6 +9,7 @@ USER root
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 # Install PySpark for Python
+ARG VERSION
 COPY requirements.txt .
 RUN pip install --no-cache-dir pyspark==${VERSION}
 RUN pip install --no-cache-dir -r requirements.txt
