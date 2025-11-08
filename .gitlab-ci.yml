@@ -1,6 +1,7 @@
 stages:
   - dummy
   - build
+  - push
 
 # Include all subdir pipelines (each service has its own .gitlab-ci.yml)
 include:

@@ -1,23 +1,52 @@
+# ======================================
+# 🏗️ Build Stage
+# ======================================
 .build_template:
   stage: build
   image: quay.io/buildah/stable
   variables:
     STORAGE_DRIVER: vfs
     BUILDAH_FORMAT: docker
-
   before_script:
     # Log in to GitLab container registry
     - echo "$CI_REGISTRY_PASSWORD" | buildah login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
-
   script:
-    # Generate tag and image name
+    # Read version and prepare image name
+    - VERSION=$(cat VERSION)
+    - export TAG_VERSION="${VERSION}"
     - export IMAGE_NAME="${CI_REGISTRY_IMAGE}/${SUBDIR}"
+    - echo "Building image ${IMAGE_NAME}:${TAG_VERSION}"
 
-    # Build image from subdir Dockerfile
-    - buildah build -t "${IMAGE_NAME}:${TAG_VERSION}" -t "${IMAGE_NAME}:latest" "${CI_PROJECT_DIR}/${SUBDIR}"
+    # Build the image
+    - buildah build --build-arg VERSION=${TAG_VERSION} -t "${IMAGE_NAME}:${TAG_VERSION}" -t "${IMAGE_NAME}:latest" "${CI_PROJECT_DIR}/${SUBDIR}"
 
-    # Push both tags
+    # Save image for next stage
+    - buildah push "${IMAGE_NAME}:${TAG_VERSION}" "docker-archive:./image.tar:${IMAGE_NAME}:${TAG_VERSION}"
+  artifacts:
+    paths:
+      - image.tar
+    expire_in: 1 hour
+
+# ======================================
+# 🚀 Push Stage
+# ======================================
+.push_template:
+  stage: push
+  image: quay.io/buildah/stable
+  variables:
+    STORAGE_DRIVER: vfs
+  dependencies:
+    - build
+  before_script:
+    # Log in again to GitLab registry
+    - echo "$CI_REGISTRY_PASSWORD" | buildah login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
+  script:
+    - VERSION=$(cat VERSION)
+    - export TAG_VERSION="${VERSION}"
+    - export IMAGE_NAME="${CI_REGISTRY_IMAGE}/${SUBDIR}"
+    - echo "Pushing ${IMAGE_NAME}:${TAG_VERSION}"
+
+    # Load image and push both tags
+    - buildah pull "docker-archive:./image.tar"
     - buildah push "${IMAGE_NAME}:${TAG_VERSION}"
     - buildah push "${IMAGE_NAME}:latest"
-  # tags:
-  #   - k8s
