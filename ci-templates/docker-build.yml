@@ -35,8 +35,7 @@
   image: quay.io/buildah/stable
   variables:
     STORAGE_DRIVER: vfs
-  dependencies:
-    - build
+    BUILDAH_FORMAT: docker
   before_script:
     # Log in again to GitLab registry
     - echo "$CI_REGISTRY_PASSWORD" | buildah login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
