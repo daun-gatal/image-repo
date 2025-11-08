@@ -13,7 +13,7 @@
 
   script:
     - echo "🔍 Running Hadolint on Dockerfile..."
-    - hadolint "${CI_PROJECT_DIR}/${SUBDIR}/Dockerfile"
+    - hadolint --config "${CI_PROJECT_DIR}/.hadolint.yaml" "${CI_PROJECT_DIR}/${SUBDIR}/Dockerfile"
 
   tags:
     - k8s

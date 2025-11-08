@@ -1,0 +1,2 @@
+ignored:
+  - DL3008  # Don't require version pinning for apt-get
