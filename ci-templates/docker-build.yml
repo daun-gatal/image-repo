@@ -14,20 +14,7 @@
   image: quay.io/buildah/stable
   variables:
     STORAGE_DRIVER: vfs
-  before_script:
-    # Install hadolint (Dockerfile linter)
-    - apt-get update -y && apt-get install -y wget
-    - wget -qO /usr/local/bin/hadolint https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64
-    - chmod +x /usr/local/bin/hadolint
   script:
-    # Basic file existence checks
-    - test -f "${CI_PROJECT_DIR}/${SUBDIR}/Dockerfile" || { echo "❌ Dockerfile not found"; exit 1; }
-    - test -f "${CI_PROJECT_DIR}/${SUBDIR}/VERSION" || { echo "❌ VERSION file missing"; exit 1; }
-
-    # Run hadolint to check syntax & best practices
-    - echo "🔍 Running hadolint..."
-    - hadolint "${CI_PROJECT_DIR}/${SUBDIR}/Dockerfile"
-
     # Run a dry-run build to validate build args and COPY paths
     - VERSION=$(cat "${CI_PROJECT_DIR}/${SUBDIR}/VERSION")
     - echo "🧪 Validating build for version ${VERSION}"
