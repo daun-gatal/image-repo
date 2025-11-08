@@ -12,7 +12,7 @@
     - echo "$CI_REGISTRY_PASSWORD" | buildah login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
   script:
     # Read version and prepare image name
-    - VERSION=$(cat VERSION)
+    - VERSION=$(cat ${CI_PROJECT_DIR}/${SUBDIR}/VERSION)
     - export TAG_VERSION="${VERSION}"
     - export IMAGE_NAME="${CI_REGISTRY_IMAGE}/${SUBDIR}"
     - echo "Building image ${IMAGE_NAME}:${TAG_VERSION}"
@@ -40,7 +40,7 @@
     # Log in again to GitLab registry
     - echo "$CI_REGISTRY_PASSWORD" | buildah login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
   script:
-    - VERSION=$(cat VERSION)
+    - VERSION=$(cat ${CI_PROJECT_DIR}/${SUBDIR}/VERSION)
     - export TAG_VERSION="${VERSION}"
     - export IMAGE_NAME="${CI_REGISTRY_IMAGE}/${SUBDIR}"
     - echo "Pushing ${IMAGE_NAME}:${TAG_VERSION}"
