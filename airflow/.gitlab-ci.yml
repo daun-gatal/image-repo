@@ -4,8 +4,8 @@ include:
 # ======================================
 # 🧱 Build during Merge Request
 # ======================================
-build_airflow:
-  extends: .build_template
+validate_airflow:
+  extends: .validate_dockerfile
   variables:
     SUBDIR: "airflow"
   rules:
@@ -20,8 +20,8 @@ build_airflow:
 # ======================================
 # 🚀 Push after merge to main
 # ======================================
-push_airflow:
-  extends: .push_template
+build_and_push_airflow:
+  extends: .build_and_push_template
   variables:
     SUBDIR: "airflow"
   rules:

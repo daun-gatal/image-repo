@@ -4,8 +4,8 @@ include:
 # ======================================
 # 🧱 Build during Merge Request
 # ======================================
-build_pyspark:
-  extends: .build_template
+validate_pyspark:
+  extends: .validate_dockerfile
   variables:
     SUBDIR: "pyspark"
   rules:
@@ -20,8 +20,8 @@ build_pyspark:
 # ======================================
 # 🚀 Push after merge to main
 # ======================================
-push_pyspark:
-  extends: .push_template
+build_and_push_pyspark:
+  extends: .build_and_push_template
   variables:
     SUBDIR: "pyspark"
   rules:
