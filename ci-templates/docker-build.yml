@@ -18,8 +18,7 @@
     # Run a dry-run build to validate build args and COPY paths
     - VERSION=$(cat "${CI_PROJECT_DIR}/${SUBDIR}/VERSION")
     - echo "🧪 Validating build for version ${VERSION}"
-    - buildah bud --no-cache --build-arg VERSION=${VERSION} --layers=false \
-        -t "dryrun:${CI_COMMIT_SHA}" "${CI_PROJECT_DIR}/${SUBDIR}"
+    - buildah bud --no-cache --build-arg VERSION=${VERSION} --layers=false -t "dryrun:${CI_COMMIT_SHA}" "${CI_PROJECT_DIR}/${SUBDIR}"
 
   tags:
     - k8s
