@@ -1,6 +1,8 @@
 stages:
   - dummy
-  - build
+  - lint
+  - validate
+  - build_and_push
 
 # Include all subdir pipelines (each service has its own .gitlab-ci.yml)
 include:
@@ -25,5 +27,5 @@ dummy_job:
     # Default: never run outside MR or merge
     - when: never
 
-  # tags:
-  #   - k8s
+  tags:
+    - k8s

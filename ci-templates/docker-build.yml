@@ -1,22 +1,66 @@
-.build_template:
-  stage: build
+# ======================================
+# Lint Stage
+# ======================================
+.lint_dockerfile:
+  stage: lint
+  image: ubuntu:22.04
+
+  before_script:
+    - apt-get update -y
+    - apt-get install -y wget ca-certificates
+    - wget -qO /usr/local/bin/hadolint https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64
+    - chmod +x /usr/local/bin/hadolint
+
+  script:
+    - echo "🔍 Running Hadolint on Dockerfile..."
+    - hadolint --config "${CI_PROJECT_DIR}/.hadolint.yaml" "${CI_PROJECT_DIR}/${SUBDIR}/Dockerfile"
+
+  tags:
+    - k8s
+  allow_failure: false
+
+# ======================================
+# Validate Stage
+# ======================================
+.validate_dockerfile:
+  stage: validate
+  image: quay.io/buildah/stable
+  variables:
+    STORAGE_DRIVER: vfs
+  script:
+    # Run a dry-run build to validate build args and COPY paths
+    - VERSION=$(cat "${CI_PROJECT_DIR}/${SUBDIR}/VERSION")
+    - echo "🧪 Validating build for version ${VERSION}"
+    - buildah bud --no-cache --build-arg VERSION=${VERSION} --layers=false -t "dryrun:${CI_COMMIT_SHA}" "${CI_PROJECT_DIR}/${SUBDIR}"
+
+  tags:
+    - k8s
+  allow_failure: false
+
+# ======================================
+# Build & Push Stage
+# ======================================
+.build_and_push_template:
+  stage: build_and_push
   image: quay.io/buildah/stable
   variables:
     STORAGE_DRIVER: vfs
     BUILDAH_FORMAT: docker
-
   before_script:
-    # Log in to GitLab container registry
-    - echo "$CI_REGISTRY_PASSWORD" | buildah login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
-
+    # Log in to GitLab Container Registry
+    - echo "$CI_REGISTRY_PASSWORD" | buildah login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
   script:
-    # Generate tag and image name
+    # Read version and prepare image name
+    - VERSION=$(cat "${CI_PROJECT_DIR}/${SUBDIR}/VERSION")
+    - export TAG_VERSION="${VERSION}"
     - export IMAGE_NAME="${CI_REGISTRY_IMAGE}/${SUBDIR}"
+    - echo "🔨 Building ${IMAGE_NAME}:${TAG_VERSION}"
 
-    # Build image from subdir Dockerfile
-    - buildah build -t "${IMAGE_NAME}:${TAG_VERSION}" -t "${IMAGE_NAME}:latest" "${CI_PROJECT_DIR}/${SUBDIR}"
+    # Build the image with both tags
+    - buildah build --build-arg VERSION="${TAG_VERSION}" -t "${IMAGE_NAME}:${TAG_VERSION}" -t "${IMAGE_NAME}:latest" "${CI_PROJECT_DIR}/${SUBDIR}"
 
-    # Push both tags
+    # Push directly to GitLab registry
+    - echo "🚀 Pushing ${IMAGE_NAME}:${TAG_VERSION} and :latest"
     - buildah push "${IMAGE_NAME}:${TAG_VERSION}"
     - buildah push "${IMAGE_NAME}:latest"
   # tags:
