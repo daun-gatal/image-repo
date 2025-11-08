@@ -1,7 +1,7 @@
 # ======================================
 # Lint Stage
 # ======================================
-lint_dockerfile:
+.lint_dockerfile:
   stage: lint
   image: ubuntu:22.04
 
