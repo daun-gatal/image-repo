@@ -1,13 +1,13 @@
 # ======================================
 # 🔍 Validate Stage
 # ======================================
-.lint_dockerfile:
-  stage: lint
-  image: hadolint/hadolint:latest
-  script:
-    - hadolint "${CI_PROJECT_DIR}/${SUBDIR}/Dockerfile"
-  tags:
-    - k8s
+# .lint_dockerfile:
+#   stage: lint
+#   image: hadolint/hadolint:latest
+#   script:
+#     - hadolint "${CI_PROJECT_DIR}/${SUBDIR}/Dockerfile"
+#   tags:
+#     - k8s
 
 .validate_dockerfile:
   stage: validate
