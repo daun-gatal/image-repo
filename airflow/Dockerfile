@@ -1,7 +1,9 @@
 # ===============================
 # Stage 1: Builder
 # ===============================
-FROM docker.io/apache/airflow:3.0.6 AS builder
+# Accept version as a build argument
+ARG VERSION
+FROM docker.io/apache/airflow:${VERSION} AS builder
 
 USER root
 
@@ -13,12 +15,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 USER airflow
 
 # Install extra Python packages into a temp directory
-RUN pip install --no-cache-dir apache-airflow-providers-apache-kafka
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 # ===============================
 # Stage 2: Final Image
 # ===============================
-FROM docker.io/apache/airflow:3.0.6
+# Accept version as a build argument
+ARG VERSION
+FROM docker.io/apache/airflow:${VERSION}
 
 USER root
 
