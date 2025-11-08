@@ -26,5 +26,5 @@ dummy_job:
     # Default: never run outside MR or merge
     - when: never
 
-  # tags:
-  #   - k8s
+  tags:
+    - k8s
