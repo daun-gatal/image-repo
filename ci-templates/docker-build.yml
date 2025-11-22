@@ -33,8 +33,10 @@
     DOCKER_TLS_CERTDIR: ""
   script:
     - VERSION=$(cat "${CI_PROJECT_DIR}/${SUBDIR}/VERSION")
+    - IMAGE="${CI_REGISTRY_IMAGE}/${SUBDIR}:${VERSION}"
     - echo "🧪 Validating Dockerfile for version ${VERSION}"
-    - docker build --no-cache --build-arg VERSION=${VERSION} -t "dryrun:${CI_COMMIT_SHA}" "${CI_PROJECT_DIR}/${SUBDIR}"
+    - docker build --no-cache --build-arg VERSION=${VERSION} -t "${IMAGE}" "${CI_PROJECT_DIR}/${SUBDIR}"
+    - echo "✅ Dockerfile validation succeeded for version ${IMAGE}"
   tags:
     - k8s
   allow_failure: false
@@ -53,7 +55,7 @@
     DOCKER_TLS_CERTDIR: ""
   before_script:
     # Log in to GitLab Container Registry
-    - echo "$CI_REGISTRY_PASSWORD" | buildah login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
   script:
     - VERSION=$(cat "${CI_PROJECT_DIR}/${SUBDIR}/VERSION")
     - IMAGE="${CI_REGISTRY_IMAGE}/${SUBDIR}:${VERSION}"
