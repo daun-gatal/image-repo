@@ -24,15 +24,16 @@
 # ======================================
 .validate_dockerfile:
   stage: validate
-  image: quay.io/buildah/stable
+  image: docker:25
+  services:
+    - name: docker:25-dind
+      command: ["--tls=false"]
   variables:
-    STORAGE_DRIVER: vfs
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
   script:
-    # Run a dry-run build to validate build args and COPY paths
     - VERSION=$(cat "${CI_PROJECT_DIR}/${SUBDIR}/VERSION")
-    - echo "🧪 Validating build for version ${VERSION}"
-    - buildah bud --no-cache --build-arg VERSION=${VERSION} --layers=false -t "dryrun:${CI_COMMIT_SHA}" "${CI_PROJECT_DIR}/${SUBDIR}"
-
+    - docker build --build-arg VERSION=$VERSION --no-cache -f "${CI_PROJECT_DIR}/${SUBDIR}/Dockerfile" "${CI_PROJECT_DIR}/${SUBDIR}"
   tags:
     - k8s
   allow_failure: false
@@ -42,25 +43,21 @@
 # ======================================
 .build_and_push_template:
   stage: build_and_push
-  image: quay.io/buildah/stable
+  image: docker:25
+  services:
+    - name: docker:25-dind
+      command: ["--tls=false"]
   variables:
-    STORAGE_DRIVER: vfs
-    BUILDAH_FORMAT: docker
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
   before_script:
-    # Log in to GitLab Container Registry
-    - echo "$CI_REGISTRY_PASSWORD" | buildah login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
   script:
-    # Read version and prepare image name
     - VERSION=$(cat "${CI_PROJECT_DIR}/${SUBDIR}/VERSION")
-    - export TAG_VERSION="${VERSION}"
-    - export IMAGE_NAME="${CI_REGISTRY_IMAGE}/${SUBDIR}"
-    - echo "🔨 Building ${IMAGE_NAME}:${TAG_VERSION}"
-
-    # Build the image with both tags
-    - buildah build --build-arg VERSION="${TAG_VERSION}" -t "${IMAGE_NAME}:${TAG_VERSION}" "${CI_PROJECT_DIR}/${SUBDIR}"
-
-    # Push directly to GitLab registry
-    - echo "🚀 Pushing ${IMAGE_NAME}:${TAG_VERSION} and :latest"
-    - buildah push "${IMAGE_NAME}:${TAG_VERSION}"
+    - IMAGE_NAME="${CI_REGISTRY_IMAGE}/${SUBDIR}"
+    - echo "Building ${IMAGE_NAME}:${VERSION}"
+    - docker build --build-arg VERSION="${VERSION}" -t "${IMAGE_NAME}:${VERSION}" "${CI_PROJECT_DIR}/${SUBDIR}"
+    - docker push "${IMAGE_NAME}:${VERSION}"
   tags:
     - k8s
+
