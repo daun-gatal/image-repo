@@ -26,14 +26,15 @@
   stage: validate
   image: registry.gitlab.com/daun-gatal/image-repo/buildah:1.23.1-amd64
   variables:
-    STORAGE_DRIVER: vfs
+    STORAGE_DRIVER: overlay
+    STORAGE_OPTS: "overlay.mount_program=/usr/bin/fuse-overlayfs"
     BUILDAH_FORMAT: docker
     BUILDAH_ISOLATION: chroot
   script:
     # Run a dry-run build to validate build args and COPY paths
     - VERSION=$(cat "${CI_PROJECT_DIR}/${SUBDIR}/VERSION")
     - echo "🧪 Validating build for version ${VERSION}"
-    - buildah bud --storage-driver="$STORAGE_DRIVER" --no-cache --build-arg VERSION=${VERSION} -t "dryrun:${CI_COMMIT_SHA}" "${CI_PROJECT_DIR}/${SUBDIR}"
+    - buildah bud --no-cache --build-arg VERSION=${VERSION} -t "dryrun:${CI_COMMIT_SHA}" "${CI_PROJECT_DIR}/${SUBDIR}"
 
   tags:
     - k8s
@@ -46,7 +47,8 @@
   stage: build_and_push
   image: registry.gitlab.com/daun-gatal/image-repo/buildah:1.23.1-amd64
   variables:
-    STORAGE_DRIVER: vfs
+    STORAGE_DRIVER: overlay
+    STORAGE_OPTS: "overlay.mount_program=/usr/bin/fuse-overlayfs"
     BUILDAH_FORMAT: docker
     BUILDAH_ISOLATION: chroot
   before_script:
@@ -60,7 +62,7 @@
     - echo "🔨 Building ${IMAGE_NAME}:${TAG_VERSION}"
 
     # Build the image with both tags
-    - buildah build --storage-driver="$STORAGE_DRIVER" --build-arg VERSION="${TAG_VERSION}" -t "${IMAGE_NAME}:${TAG_VERSION}" "${CI_PROJECT_DIR}/${SUBDIR}"
+    - buildah build --build-arg VERSION="${TAG_VERSION}" -t "${IMAGE_NAME}:${TAG_VERSION}" "${CI_PROJECT_DIR}/${SUBDIR}"
 
     # Push directly to GitLab registry
     - echo "🚀 Pushing ${IMAGE_NAME}:${TAG_VERSION}"
