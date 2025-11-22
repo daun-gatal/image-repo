@@ -24,7 +24,7 @@
 # ======================================
 .validate_dockerfile:
   stage: validate
-  image: quay.io/buildah/stable
+  image: registry.gitlab.com/daun-gatal/image-repo/buildah:1.23.1
   variables:
     STORAGE_DRIVER: vfs
     BUILDAH_FORMAT: docker
@@ -44,7 +44,7 @@
 # ======================================
 .build_and_push_template:
   stage: build_and_push
-  image: quay.io/buildah/stable
+  image: registry.gitlab.com/daun-gatal/image-repo/buildah:1.23.1
   variables:
     STORAGE_DRIVER: vfs
     BUILDAH_FORMAT: docker
