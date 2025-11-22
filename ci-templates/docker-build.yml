@@ -24,17 +24,17 @@
 # ======================================
 .validate_dockerfile:
   stage: validate
-  image: registry.gitlab.com/daun-gatal/image-repo/buildah:1.23.1-amd64
+  image: quay.io/buildah/stable
   variables:
     STORAGE_DRIVER: overlay
-    STORAGE_OPTS: "overlay.mount_program=/usr/bin/fuse-overlayfs"
     BUILDAH_FORMAT: docker
     BUILDAH_ISOLATION: chroot
+    BUILDAH_ROOTFUL: "true"
   script:
     # Run a dry-run build to validate build args and COPY paths
     - VERSION=$(cat "${CI_PROJECT_DIR}/${SUBDIR}/VERSION")
     - echo "🧪 Validating build for version ${VERSION}"
-    - buildah bud --no-cache --build-arg VERSION=${VERSION} -t "dryrun:${CI_COMMIT_SHA}" "${CI_PROJECT_DIR}/${SUBDIR}"
+    - buildah bud --no-cache --build-arg VERSION=${VERSION} --layers=false -t "dryrun:${CI_COMMIT_SHA}" "${CI_PROJECT_DIR}/${SUBDIR}"
 
   tags:
     - k8s
@@ -45,12 +45,12 @@
 # ======================================
 .build_and_push_template:
   stage: build_and_push
-  image: registry.gitlab.com/daun-gatal/image-repo/buildah:1.23.1-amd64
+  image: quay.io/buildah/stable
   variables:
     STORAGE_DRIVER: overlay
-    STORAGE_OPTS: "overlay.mount_program=/usr/bin/fuse-overlayfs"
     BUILDAH_FORMAT: docker
     BUILDAH_ISOLATION: chroot
+    BUILDAH_ROOTFUL: "true"
   before_script:
     # Log in to GitLab Container Registry
     - echo "$CI_REGISTRY_PASSWORD" | buildah login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
