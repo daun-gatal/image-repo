@@ -27,10 +27,10 @@
   image: docker:27
   services:
     - name: docker:27-dind
+      command: ["--tls=false"]
   variables:
-    DOCKER_HOST: tcp://svc-0:2375
+    DOCKER_HOST: tcp://docker:2375
     DOCKER_TLS_CERTDIR: ""
-    DOCKER_DRIVER: overlay2
   script:
     - VERSION=$(cat "${CI_PROJECT_DIR}/${SUBDIR}/VERSION")
     - echo "🧪 Validating Dockerfile for version ${VERSION}"
@@ -47,10 +47,10 @@
   image: docker:27
   services:
     - name: docker:27-dind
+      command: ["--tls=false"]
   variables:
-    DOCKER_HOST: tcp://svc-0:2375
+    DOCKER_HOST: tcp://docker:2375
     DOCKER_TLS_CERTDIR: ""
-    DOCKER_DRIVER: overlay2
   before_script:
     # Log in to GitLab Container Registry
     - echo "$CI_REGISTRY_PASSWORD" | buildah login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
