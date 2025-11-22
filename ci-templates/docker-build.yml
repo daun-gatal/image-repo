@@ -26,7 +26,7 @@
   stage: validate
   image: quay.io/buildah/stable
   variables:
-    STORAGE_DRIVER: overlay
+    STORAGE_DRIVER: vfs
     BUILDAH_FORMAT: docker
     BUILDAH_ISOLATION: chroot
     BUILDAH_ROOTFUL: "true"
@@ -47,7 +47,7 @@
   stage: build_and_push
   image: quay.io/buildah/stable
   variables:
-    STORAGE_DRIVER: overlay
+    STORAGE_DRIVER: vfs
     BUILDAH_FORMAT: docker
     BUILDAH_ISOLATION: chroot
     BUILDAH_ROOTFUL: "true"
