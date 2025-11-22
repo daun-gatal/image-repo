@@ -28,7 +28,7 @@
   services:
     - name: docker:27-dind
   variables:
-    DOCKER_HOST: tcp://docker:2375
+    DOCKER_HOST: tcp://svc-0:2375
     DOCKER_TLS_CERTDIR: ""
     DOCKER_DRIVER: overlay2
   script:
@@ -44,27 +44,22 @@
 # ======================================
 .build_and_push_template:
   stage: build_and_push
-  image: quay.io/buildah/stable
+  image: docker:27
+  services:
+    - name: docker:27-dind
   variables:
-    STORAGE_DRIVER: vfs
-    BUILDAH_FORMAT: docker
-    BUILDAH_ISOLATION: chroot
-    BUILDAH_ROOTFUL: "true"
+    DOCKER_HOST: tcp://svc-0:2375
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_DRIVER: overlay2
   before_script:
     # Log in to GitLab Container Registry
     - echo "$CI_REGISTRY_PASSWORD" | buildah login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
   script:
-    # Read version and prepare image name
     - VERSION=$(cat "${CI_PROJECT_DIR}/${SUBDIR}/VERSION")
-    - export TAG_VERSION="${VERSION}"
-    - export IMAGE_NAME="${CI_REGISTRY_IMAGE}/${SUBDIR}"
-    - echo "🔨 Building ${IMAGE_NAME}:${TAG_VERSION}"
-
-    # Build the image with both tags
-    - buildah build --build-arg VERSION="${TAG_VERSION}" -t "${IMAGE_NAME}:${TAG_VERSION}" "${CI_PROJECT_DIR}/${SUBDIR}"
-
-    # Push directly to GitLab registry
-    - echo "🚀 Pushing ${IMAGE_NAME}:${TAG_VERSION}"
-    - buildah push "${IMAGE_NAME}:${TAG_VERSION}"
+    - IMAGE="${CI_REGISTRY_IMAGE}/${SUBDIR}:${VERSION}"
+    - echo "🔨 Building ${IMAGE}"
+    - docker build --build-arg VERSION="${VERSION}" -t "${IMAGE}" "${CI_PROJECT_DIR}/${SUBDIR}"
+    - echo "🚀 Pushing ${IMAGE}"
+    - docker push "${IMAGE}"
   tags:
     - k8s
