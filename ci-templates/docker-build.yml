@@ -24,18 +24,15 @@
 # ======================================
 .validate_dockerfile:
   stage: validate
-  image: quay.io/buildah/stable
+  image: docker:27
+  services:
+    - name: docker:27-dind
   variables:
-    STORAGE_DRIVER: vfs
-    BUILDAH_FORMAT: docker
-    BUILDAH_ISOLATION: chroot
-    BUILDAH_ROOTFUL: "true"
+    DOCKER_TLS_CERTDIR: ""
   script:
-    # Run a dry-run build to validate build args and COPY paths
     - VERSION=$(cat "${CI_PROJECT_DIR}/${SUBDIR}/VERSION")
-    - echo "🧪 Validating build for version ${VERSION}"
-    - buildah bud --no-cache --build-arg VERSION=${VERSION} --layers=false -t "dryrun:${CI_COMMIT_SHA}" "${CI_PROJECT_DIR}/${SUBDIR}"
-
+    - echo "🧪 Validating Dockerfile for version ${VERSION}"
+    - docker build --no-cache --build-arg VERSION=${VERSION} -t "dryrun:${CI_COMMIT_SHA}" "${CI_PROJECT_DIR}/${SUBDIR}"
   tags:
     - k8s
   allow_failure: false
