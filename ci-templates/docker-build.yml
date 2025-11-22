@@ -57,11 +57,10 @@
     - echo "🔨 Building ${IMAGE_NAME}:${TAG_VERSION}"
 
     # Build the image with both tags
-    - buildah build --build-arg VERSION="${TAG_VERSION}" -t "${IMAGE_NAME}:${TAG_VERSION}" -t "${IMAGE_NAME}:latest" "${CI_PROJECT_DIR}/${SUBDIR}"
+    - buildah build --build-arg VERSION="${TAG_VERSION}" -t "${IMAGE_NAME}:${TAG_VERSION}" "${CI_PROJECT_DIR}/${SUBDIR}"
 
     # Push directly to GitLab registry
     - echo "🚀 Pushing ${IMAGE_NAME}:${TAG_VERSION} and :latest"
     - buildah push "${IMAGE_NAME}:${TAG_VERSION}"
-    - buildah push "${IMAGE_NAME}:latest"
   tags:
     - k8s
