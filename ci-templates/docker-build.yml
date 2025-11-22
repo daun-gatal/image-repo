@@ -24,16 +24,15 @@
 # ======================================
 .validate_dockerfile:
   stage: validate
-  image: docker:25
-  services:
-    - name: docker:25-dind
-      command: ["--tls=false"]
+  image: quay.io/buildah/stable
   variables:
-    DOCKER_HOST: tcp://docker:2375
-    DOCKER_TLS_CERTDIR: ""
+    STORAGE_DRIVER: vfs
   script:
+    # Run a dry-run build to validate build args and COPY paths
     - VERSION=$(cat "${CI_PROJECT_DIR}/${SUBDIR}/VERSION")
-    - docker build --build-arg VERSION=$VERSION --no-cache -f "${CI_PROJECT_DIR}/${SUBDIR}/Dockerfile" "${CI_PROJECT_DIR}/${SUBDIR}"
+    - echo "🧪 Validating build for version ${VERSION}"
+    - buildah bud --storage-driver="$STORAGE_DRIVER" --no-cache --build-arg VERSION=${VERSION} --layers=false -t "dryrun:${CI_COMMIT_SHA}" "${CI_PROJECT_DIR}/${SUBDIR}"
+
   tags:
     - k8s
   allow_failure: false
@@ -43,21 +42,25 @@
 # ======================================
 .build_and_push_template:
   stage: build_and_push
-  image: docker:25
-  services:
-    - name: docker:25-dind
-      command: ["--tls=false"]
+  image: quay.io/buildah/stable
   variables:
-    DOCKER_HOST: tcp://docker:2375
-    DOCKER_TLS_CERTDIR: ""
+    STORAGE_DRIVER: vfs
+    BUILDAH_FORMAT: docker
   before_script:
-    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+    # Log in to GitLab Container Registry
+    - echo "$CI_REGISTRY_PASSWORD" | buildah login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
   script:
+    # Read version and prepare image name
     - VERSION=$(cat "${CI_PROJECT_DIR}/${SUBDIR}/VERSION")
-    - IMAGE_NAME="${CI_REGISTRY_IMAGE}/${SUBDIR}"
-    - echo "Building ${IMAGE_NAME}:${VERSION}"
-    - docker build --build-arg VERSION="${VERSION}" -t "${IMAGE_NAME}:${VERSION}" "${CI_PROJECT_DIR}/${SUBDIR}"
-    - docker push "${IMAGE_NAME}:${VERSION}"
+    - export TAG_VERSION="${VERSION}"
+    - export IMAGE_NAME="${CI_REGISTRY_IMAGE}/${SUBDIR}"
+    - echo "🔨 Building ${IMAGE_NAME}:${TAG_VERSION}"
+
+    # Build the image with both tags
+    - buildah build --storage-driver="$STORAGE_DRIVER" --build-arg VERSION="${TAG_VERSION}" -t "${IMAGE_NAME}:${TAG_VERSION}" "${CI_PROJECT_DIR}/${SUBDIR}"
+
+    # Push directly to GitLab registry
+    - echo "🚀 Pushing ${IMAGE_NAME}:${TAG_VERSION}"
+    - buildah push "${IMAGE_NAME}:${TAG_VERSION}"
   tags:
     - k8s
-
