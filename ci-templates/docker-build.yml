@@ -27,6 +27,8 @@
   image: quay.io/buildah/stable
   variables:
     STORAGE_DRIVER: vfs
+    BUILDAH_FORMAT: docker
+    BUILDAH_ISOLATION: chroot
   script:
     # Run a dry-run build to validate build args and COPY paths
     - VERSION=$(cat "${CI_PROJECT_DIR}/${SUBDIR}/VERSION")
@@ -46,6 +48,7 @@
   variables:
     STORAGE_DRIVER: vfs
     BUILDAH_FORMAT: docker
+    BUILDAH_ISOLATION: chroot
   before_script:
     # Log in to GitLab Container Registry
     - echo "$CI_REGISTRY_PASSWORD" | buildah login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
