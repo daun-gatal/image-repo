@@ -1,26 +1,38 @@
+FROM eclipse-temurin:17-jdk AS iceberg-builder
+
+# Install dependencies
+RUN apt-get update && \
+    apt-get install -y git wget unzip && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install Gradle
+RUN wget https://services.gradle.org/distributions/gradle-8.14.3-bin.zip && \
+    unzip gradle-8.14.3-bin.zip -d /opt && \
+    rm gradle-8.14.3-bin.zip
+ENV PATH="/opt/gradle-8.14.3/bin:${PATH}"
+
+# Build Iceberg
+WORKDIR /workspace
+RUN git clone --depth 1 https://github.com/apache/iceberg.git && \
+    cd iceberg && \
+    ./gradlew -x test -x integrationTest clean build
+
+# Extract Iceberg Kafka Connect runtime ZIP
+RUN mkdir -p /workspace/iceberg-connect
+RUN cp /workspace/iceberg/kafka-connect/kafka-connect-runtime/build/distributions/*.zip /workspace/iceberg-connect/
+
+WORKDIR /workspace/iceberg-connect
+RUN for zip in *.zip ; do unzip -o "$zip" ; done
+
 ARG VERSION
 FROM docker.io/confluentinc/cp-kafka-connect:${VERSION}
-
-# Iceberg version you want
-ARG ICEBERG_VERSION=1.10.0
 
 # Create plugin directory
 RUN mkdir -p /usr/share/java/iceberg-connect
 
-# Install Iceberg Kafka Connect sink + dependencies
-RUN curl -L -o /usr/share/java/iceberg-connect/iceberg-kafka-connect.jar \
-      https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-kafka-connect/${ICEBERG_VERSION}/iceberg-kafka-connect-${ICEBERG_VERSION}.jar && \
-    curl -L -o /usr/share/java/iceberg-connect/iceberg-api.jar \
-      https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-api/${ICEBERG_VERSION}/iceberg-api-${ICEBERG_VERSION}.jar && \
-    curl -L -o /usr/share/java/iceberg-connect/iceberg-core.jar \
-      https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-core/${ICEBERG_VERSION}/iceberg-core-${ICEBERG_VERSION}.jar && \
-    curl -L -o /usr/share/java/iceberg-connect/iceberg-common.jar \
-      https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-common/${ICEBERG_VERSION}/iceberg-common-${ICEBERG_VERSION}.jar && \
-    curl -L -o /usr/share/java/iceberg-connect/iceberg-parquet.jar \
-      https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-parquet/${ICEBERG_VERSION}/iceberg-parquet-${ICEBERG_VERSION}.jar
+# Copy built libraries from builder stage
+COPY --from=iceberg-builder /workspace/iceberg-connect/lib /usr/share/java/iceberg-connect/
 
-# OPTIONAL: S3 / MinIO Support
-RUN curl -L -o /usr/share/java/iceberg-connect/iceberg-aws.jar \
-      https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-aws/${ICEBERG_VERSION}/iceberg-aws-${ICEBERG_VERSION}.jar
+RUN ls -l /usr/share/java/iceberg-connect/
 
 ENV CONNECT_PLUGIN_PATH="/usr/share/java,/usr/share/java/iceberg-connect,/usr/share/confluent-hub-components,/usr/share/filestream-connectors"
