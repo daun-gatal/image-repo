@@ -1,5 +1,8 @@
 ARG VERSION
 
+# ==============================
+# Stage 1: Build Iceberg from source
+# ==============================
 FROM eclipse-temurin:17-jdk AS iceberg-builder
 
 # Install dependencies
@@ -20,19 +23,22 @@ RUN git clone --depth 1 https://github.com/apache/iceberg.git && \
     ./gradlew -x test -x integrationTest clean build
 
 # Extract Iceberg Kafka Connect runtime ZIP
-RUN mkdir -p /workspace/iceberg-connect
-RUN cp /workspace/iceberg/kafka-connect/kafka-connect-runtime/build/distributions/*.zip /workspace/iceberg-connect/
+RUN mkdir -p /workspace/kafka-connect-lib
+RUN cp /workspace/iceberg/kafka-connect/kafka-connect-runtime/build/distributions/iceberg-kafka-connect-runtime-*.zip /workspace/kafka-connect-lib/
 
-WORKDIR /workspace/iceberg-connect
-RUN for zip in *.zip ; do unzip -o "$zip" ; done
+WORKDIR /workspace/kafka-connect-lib
+RUN for zip in iceberg-kafka-connect-runtime-*.zip ; do unzip -o "$zip" ; done
 
+# ==============================
+# Stage 2: Final Kafka Connect image
+# ==============================
 FROM docker.io/confluentinc/cp-kafka-connect:${VERSION}
 
 # Create plugin directory
 RUN mkdir -p /usr/share/java/iceberg-connect
 
 # Copy built libraries from builder stage
-COPY --from=iceberg-builder /workspace/iceberg-connect/lib /usr/share/java/iceberg-connect/
+COPY --from=iceberg-builder /workspace/kafka-connect-lib /usr/share/java/iceberg-connect/
 
 RUN ls -l /usr/share/java/iceberg-connect/
 
