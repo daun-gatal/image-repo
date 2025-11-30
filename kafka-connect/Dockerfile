@@ -38,6 +38,10 @@ RUN echo "Flattening all lib folders into /workspace/kafka-connect-lib ..." && \
         fi; \
     done
 
+# Download PostgreSQL JDBC driver
+RUN wget https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.8/postgresql-42.7.8.jar \
+    -O //workspace/final-lib/postgresql-42.7.8.jar
+
 # ==============================
 # Stage 2: Final Kafka Connect image
 # ==============================
