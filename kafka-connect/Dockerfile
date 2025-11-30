@@ -40,6 +40,14 @@ RUN mkdir -p /usr/share/java/iceberg-connect
 # Copy built libraries from builder stage
 COPY --from=iceberg-builder /workspace/kafka-connect-lib /usr/share/java/iceberg-connect/
 
-RUN ls -l /usr/share/java/iceberg-connect/
+# After copying your built artifacts into the image
+RUN ls -l /usr/share/java/iceberg-connect && \
+    echo "Removing ZIP files..." && \
+    rm -f /usr/share/java/iceberg-connect/*.zip && \
+    echo "Listing extracted connector folders..." && \
+    for d in /usr/share/java/iceberg-connect/*/ ; do \
+        echo "----- $d -----"; \
+        ls -l "$d"; \
+    done
 
 ENV CONNECT_PLUGIN_PATH="/usr/share/java,/usr/share/java/iceberg-connect,/usr/share/confluent-hub-components,/usr/share/filestream-connectors"
