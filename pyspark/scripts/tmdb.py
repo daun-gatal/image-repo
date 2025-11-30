@@ -148,7 +148,7 @@ try:
         spark.readStream.format("kafka")
         .option(
             "kafka.bootstrap.servers",
-            "kafka-kafka-bootstrap.kafka.svc.cluster.local:9092",
+            "kafka-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092",
         )
         .option("subscribe", "tmdb")
         .option("startingOffsets", "latest")
