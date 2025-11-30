@@ -1,3 +1,5 @@
+ARG VERSION
+
 FROM eclipse-temurin:17-jdk AS iceberg-builder
 
 # Install dependencies
@@ -24,7 +26,6 @@ RUN cp /workspace/iceberg/kafka-connect/kafka-connect-runtime/build/distribution
 WORKDIR /workspace/iceberg-connect
 RUN for zip in *.zip ; do unzip -o "$zip" ; done
 
-ARG VERSION
 FROM docker.io/confluentinc/cp-kafka-connect:${VERSION}
 
 # Create plugin directory
