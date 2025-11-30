@@ -1,5 +1,5 @@
 ARG VERSION
-FROM confluentinc/cp-kafka-connect:${VERSION}
+FROM docker.io/confluentinc/cp-kafka-connect:${VERSION}
 
 # Iceberg version you want
 ARG ICEBERG_VERSION=1.10.0
