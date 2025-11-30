@@ -37,13 +37,6 @@
     - echo "🧪 Validating Dockerfile for version ${VERSION}"
     - docker build --no-cache --build-arg VERSION=${VERSION} -t "${IMAGE}" "${CI_PROJECT_DIR}/${SUBDIR}"
     - echo "✅ Dockerfile validation succeeded for version ${IMAGE}"
-    # Save image for next job
-    - echo "📦 Saving image for next stage..."
-    - docker save "${IMAGE}" -o "${SUBDIR}-image.tar"
-  artifacts:
-    paths:
-      - "${SUBDIR}-image.tar"
-    expire_in: 1 hour
   tags:
     - k8s
   allow_failure: false
@@ -66,11 +59,8 @@
   script:
     - VERSION=$(cat "${CI_PROJECT_DIR}/${SUBDIR}/VERSION")
     - IMAGE="${CI_REGISTRY_IMAGE}/${SUBDIR}:${VERSION}"
-    # Load image from validate step
-    - echo "📥 Loading prebuilt image..."
-    - docker load -i "${SUBDIR}-image.tar"
-    # Ensure image is properly tagged
-    - docker tag "${IMAGE}" "${IMAGE}"
+    - echo "🔨 Building ${IMAGE}"
+    - docker build --build-arg VERSION="${VERSION}" -t "${IMAGE}" "${CI_PROJECT_DIR}/${SUBDIR}"
     - echo "🚀 Pushing ${IMAGE}"
     - docker push "${IMAGE}"
   tags:
