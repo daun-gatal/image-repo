@@ -40,7 +40,12 @@ RUN echo "Flattening all lib folders into /workspace/kafka-connect-lib ..." && \
 
 # Download PostgreSQL JDBC driver
 RUN wget https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.8/postgresql-42.7.8.jar \
-    -O //workspace/final-lib/postgresql-42.7.8.jar
+    -O /workspace/final-lib/postgresql-42.7.8.jar
+
+# Add Hadoop AWS dependency
+RUN wget -https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.4.2/hadoop-aws-3.4.2.jar \
+    -O /workspace/final-lib/hadoop-aws-3.4.2.jar 
+    
 
 # ==============================
 # Stage 2: Final Kafka Connect image
