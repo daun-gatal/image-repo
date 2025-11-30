@@ -44,10 +44,19 @@ COPY --from=iceberg-builder /workspace/kafka-connect-lib /usr/share/java/iceberg
 RUN ls -l /usr/share/java/iceberg-connect && \
     echo "Removing ZIP files..." && \
     rm -f /usr/share/java/iceberg-connect/*.zip && \
-    echo "Listing extracted connector folders..." && \
+    echo "Flattening all lib folders into /usr/share/java/iceberg-connect ..." && \
     for d in /usr/share/java/iceberg-connect/*/ ; do \
-        echo "----- $d -----"; \
-        ls -l "$d"; \
-    done
+        if [ -d "$d/lib" ]; then \
+            echo "Copying libs from $d/lib ..."; \
+            cp -v "$d/lib"/*.jar /usr/share/java/iceberg-connect/ ; \
+        fi; \
+    done && \
+    echo "Cleaning subfolders..." && \
+    for d in /usr/share/java/iceberg-connect/*/ ; do \
+        rm -rf "$d"; \
+    done && \
+    echo "Final plugin directory contents:" && \
+    ls -l /usr/share/java/iceberg-connect
+
 
 ENV CONNECT_PLUGIN_PATH="/usr/share/java,/usr/share/java/iceberg-connect,/usr/share/confluent-hub-components,/usr/share/filestream-connectors"
