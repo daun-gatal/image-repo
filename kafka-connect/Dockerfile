@@ -43,7 +43,7 @@ RUN wget https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.8/postgre
     -O /workspace/final-lib/postgresql-42.7.8.jar
 
 # Add Hadoop AWS dependency
-RUN wget -https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.4.2/hadoop-aws-3.4.2.jar \
+RUN wget https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.4.2/hadoop-aws-3.4.2.jar \
     -O /workspace/final-lib/hadoop-aws-3.4.2.jar 
     
 
