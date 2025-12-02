@@ -43,10 +43,6 @@ RUN echo "=== Verifying iceberg-api JAR ===" && \
     ls -la /workspace/final-lib/iceberg-api*.jar && \
     echo "=================================="
 
-RUN echo "=== Remove S3 JAR ===" && \
-    rm /workspace/final-lib/s3-2.39.5.jar && \
-    echo "=================================="
-
 # Download PostgreSQL JDBC driver
 RUN wget https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.8/postgresql-42.7.8.jar \
     -O /workspace/final-lib/postgresql-42.7.8.jar
@@ -56,18 +52,12 @@ RUN wget https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.4.2/hadoo
     -O /workspace/final-lib/hadoop-aws-3.4.2.jar
 
 # Add AWS SDK S3 Transfer Manager (not included in bundle)
-RUN wget https://repo1.maven.org/maven2/software/amazon/awssdk/s3-transfer-manager/2.31.69/s3-transfer-manager-2.31.69.jar \
-    -O /workspace/final-lib/s3-transfer-manager-2.31.69.jar
-
-RUN wget https://repo1.maven.org/maven2/software/amazon/awssdk/s3/2.31.69/s3-2.31.69.jar \
-    -O /workspace/final-lib/s3-2.31.69.jar
-
-RUN wget https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-aws-bundle/1.10.0/iceberg-aws-bundle-1.10.0.jar \
-    -O /workspace/final-lib/iceberg-aws-bundle-1.10.0.jar
+RUN wget https://repo1.maven.org/maven2/software/amazon/awssdk/s3-transfer-manager/2.29.52/s3-transfer-manager-2.29.52.jar \
+    -O /workspace/final-lib/s3-transfer-manager-2.29.52.jar
 
 # Add AWS SDK bundle (often needed with hadoop-aws)
-# RUN wget https://repo1.maven.org/maven2/software/amazon/awssdk/bundle/2.29.51/bundle-2.29.51.jar \
-#     -O /workspace/final-lib/aws-sdk-bundle-2.29.51.jar
+RUN wget https://repo1.maven.org/maven2/software/amazon/awssdk/bundle/2.29.52/bundle-2.29.52.jar \
+    -O /workspace/final-lib/bundle-2.29.52.jar
 
 # ==============================
 # Stage 2: Final Kafka Connect image
