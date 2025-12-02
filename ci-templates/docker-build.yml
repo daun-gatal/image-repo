@@ -60,7 +60,7 @@
     - VERSION=$(cat "${CI_PROJECT_DIR}/${SUBDIR}/VERSION")
     - IMAGE="${CI_REGISTRY_IMAGE}/${SUBDIR}:${VERSION}"
     - echo "🔨 Building ${IMAGE}"
-    - docker build --build-arg VERSION="${VERSION}" -t "${IMAGE}" "${CI_PROJECT_DIR}/${SUBDIR}"
+    - docker build --no-cache --build-arg VERSION="${VERSION}" -t "${IMAGE}" "${CI_PROJECT_DIR}/${SUBDIR}"
     - echo "🚀 Pushing ${IMAGE}"
     - docker push "${IMAGE}"
   tags:
