@@ -52,8 +52,8 @@ RUN wget https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.4.2/hadoo
     -O /workspace/final-lib/hadoop-aws-3.4.2.jar
 
 # Add AWS SDK bundle (often needed with hadoop-aws)
-RUN wget https://repo1.maven.org/maven2/software/amazon/awssdk/bundle/2.29.51/bundle-2.29.51.jar \
-    -O /workspace/final-lib/aws-sdk-bundle-2.29.51.jar
+# RUN wget https://repo1.maven.org/maven2/software/amazon/awssdk/bundle/2.29.51/bundle-2.29.51.jar \
+#     -O /workspace/final-lib/aws-sdk-bundle-2.29.51.jar
 
 # ==============================
 # Stage 2: Final Kafka Connect image
