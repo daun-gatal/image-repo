@@ -7,26 +7,26 @@ include:
 lint_kafka_connect:
   extends: .lint_dockerfile
   variables:
-    SUBDIR: "kafka-connect"
+    SUBDIR: "cp-kafka-connect"
   rules:
     # Run during Merge Requests when pyspark code changes
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
       changes:
-        - kafka-connect/Dockerfile
-        - kafka-connect/**/*
+        - cp-kafka-connect/Dockerfile
+        - cp-kafka-connect/**/*
       when: always
     - when: never
 
 validate_kafka_connect:
   extends: .validate_dockerfile
   variables:
-    SUBDIR: "kafka-connect"
+    SUBDIR: "cp-kafka-connect"
   rules:
     # Run during Merge Requests when pyspark code changes
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
       changes:
-        - kafka-connect/Dockerfile
-        - kafka-connect/**/*
+        - cp-kafka-connect/Dockerfile
+        - cp-kafka-connect/**/*
       when: always
     - when: never
 
@@ -36,12 +36,12 @@ validate_kafka_connect:
 build_and_push_kafka_connect:
   extends: .build_and_push_template
   variables:
-    SUBDIR: "kafka-connect"
+    SUBDIR: "cp-kafka-connect"
   rules:
     # Only run after merge (push to main)
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "main"'
       changes:
-        - kafka-connect/Dockerfile
-        - kafka-connect/**/*
+        - cp-kafka-connect/Dockerfile
+        - cp-kafka-connect/**/*
       when: always
     - when: never

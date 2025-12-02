@@ -8,7 +8,7 @@ stages:
 include:
   - local: 'airflow/.gitlab-ci.yml'
   - local: 'pyspark/.gitlab-ci.yml'
-  - local: 'kafka-connect/.gitlab-ci.yml'
+  - local: 'cp-kafka-connect/.gitlab-ci.yml'
 
 dummy_job:
   stage: dummy
