@@ -3,7 +3,7 @@ ARG VERSION
 # ==============================
 # Stage 1: Build Iceberg from source
 # ==============================
-FROM eclipse-temurin:17-jdk AS iceberg-builder
+FROM eclipse-temurin:21-jdk AS iceberg-builder
 
 # Install dependencies
 RUN apt-get update && \
