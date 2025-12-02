@@ -55,7 +55,7 @@ RUN wget https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.4.2/hadoo
 RUN wget https://repo1.maven.org/maven2/software/amazon/awssdk/s3-transfer-manager/2.29.52/s3-transfer-manager-2.29.52.jar \
     -O /workspace/final-lib/s3-transfer-manager-2.29.52.jar
 
-Add AWS SDK bundle (often needed with hadoop-aws)
+# Add AWS SDK bundle (often needed with hadoop-aws)
 RUN wget https://repo1.maven.org/maven2/software/amazon/awssdk/bundle/2.29.52/bundle-2.29.52.jar \
     -O /workspace/final-lib/bundle-2.29.52.jar
 
