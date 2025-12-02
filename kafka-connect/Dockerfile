@@ -52,8 +52,11 @@ RUN wget https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.4.2/hadoo
     -O /workspace/final-lib/hadoop-aws-3.4.2.jar
 
 # Add AWS SDK S3 Transfer Manager (not included in bundle)
-RUN wget https://repo1.maven.org/maven2/software/amazon/awssdk/s3-transfer-manager/2.29.52/s3-transfer-manager-2.29.52.jar \
-    -O /workspace/final-lib/s3-transfer-manager-2.29.52.jar
+RUN wget https://repo1.maven.org/maven2/software/amazon/awssdk/s3-transfer-manager/2.39.5/s3-transfer-manager-2.39.5.jar \
+    -O /workspace/final-lib/s3-transfer-manager-2.39.5.jar
+
+RUN wget https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-aws-bundle/1.10.0/iceberg-aws-bundle-1.10.0.jar \
+    -O /workspace/final-lib/iceberg-aws-bundle-1.10.0.jar
 
 # Add AWS SDK bundle (often needed with hadoop-aws)
 # RUN wget https://repo1.maven.org/maven2/software/amazon/awssdk/bundle/2.29.51/bundle-2.29.51.jar \
