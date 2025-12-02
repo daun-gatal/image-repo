@@ -23,20 +23,25 @@ RUN git clone --depth 1 https://github.com/apache/iceberg.git && \
     ./gradlew -x test -x integrationTest clean build
 
 # Extract Iceberg Kafka Connect runtime ZIP
-RUN mkdir -p /workspace/kafka-connect-lib
-RUN cp /workspace/iceberg/kafka-connect/kafka-connect-runtime/build/distributions/iceberg-kafka-connect-runtime-*.zip /workspace/kafka-connect-lib/
+RUN mkdir -p /workspace/kafka-connect-lib /workspace/final-lib
 
+# Copy and extract the ZIP
 WORKDIR /workspace/kafka-connect-lib
-RUN for zip in iceberg-kafka-connect-runtime-*.zip ; do unzip -o "$zip" ; done
+RUN cp /workspace/iceberg/kafka-connect/kafka-connect-runtime/build/distributions/iceberg-kafka-connect-runtime-*.zip . && \
+    for zip in iceberg-kafka-connect-runtime-*.zip ; do unzip -o "$zip" ; done
 
-RUN mkdir -p /workspace/final-lib
-RUN echo "Flattening all lib folders into /workspace/kafka-connect-lib ..." && \
-    for d in /workspace/kafka-connect-lib/*/ ; do \
-        if [ -d "$d/lib" ]; then \
-            echo "Copying libs from $d/lib ..."; \
-            cp -v "$d/lib"/*.jar /workspace/final-lib/ ; \
-        fi; \
-    done
+# Debug: Show what was extracted
+RUN echo "=== Extracted contents ===" && \
+    find /workspace/kafka-connect-lib -name "*.jar" -type f && \
+    echo "==========================="
+
+# Copy ALL JARs using find (more robust than glob)
+RUN find /workspace/kafka-connect-lib -name "*.jar" -type f -exec cp -v {} /workspace/final-lib/ \;
+
+# Verify iceberg-api JAR exists
+RUN echo "=== Verifying iceberg-api JAR ===" && \
+    ls -la /workspace/final-lib/iceberg-api*.jar && \
+    echo "=================================="
 
 # Download PostgreSQL JDBC driver
 RUN wget https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.8/postgresql-42.7.8.jar \
@@ -44,8 +49,11 @@ RUN wget https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.8/postgre
 
 # Add Hadoop AWS dependency
 RUN wget https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.4.2/hadoop-aws-3.4.2.jar \
-    -O /workspace/final-lib/hadoop-aws-3.4.2.jar 
-    
+    -O /workspace/final-lib/hadoop-aws-3.4.2.jar
+
+# Add AWS SDK bundle (often needed with hadoop-aws)
+RUN wget https://repo1.maven.org/maven2/software/amazon/awssdk/bundle/2.29.51/bundle-2.29.51.jar \
+    -O /workspace/final-lib/aws-sdk-bundle-2.29.51.jar
 
 # ==============================
 # Stage 2: Final Kafka Connect image
@@ -58,7 +66,10 @@ RUN mkdir -p /usr/share/java/iceberg-connect
 # Copy built libraries from builder stage
 COPY --from=iceberg-builder /workspace/final-lib /usr/share/java/iceberg-connect/
 
-# After copying your built artifacts into the image
-RUN ls -l /usr/share/java/iceberg-connect/
+# Verify the iceberg-api JAR is present (this is the one with IcebergBuild)
+RUN echo "=== Final JARs ===" && \
+    ls -la /usr/share/java/iceberg-connect/ && \
+    echo "=== Checking for iceberg-api ===" && \
+    ls /usr/share/java/iceberg-connect/iceberg-api*.jar
 
 ENV CONNECT_PLUGIN_PATH="/usr/share/java,/usr/share/java/iceberg-connect,/usr/share/confluent-hub-components,/usr/share/filestream-connectors"
