@@ -51,6 +51,10 @@ RUN wget https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.8/postgre
 RUN wget https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.4.2/hadoop-aws-3.4.2.jar \
     -O /workspace/final-lib/hadoop-aws-3.4.2.jar
 
+# Add AWS SDK S3 Transfer Manager (not included in bundle)
+RUN wget https://repo1.maven.org/maven2/software/amazon/awssdk/s3-transfer-manager/2.29.52/s3-transfer-manager-2.29.52.jar \
+    -O /workspace/final-lib/s3-transfer-manager-2.29.52.jar
+
 # Add AWS SDK bundle (often needed with hadoop-aws)
 # RUN wget https://repo1.maven.org/maven2/software/amazon/awssdk/bundle/2.29.51/bundle-2.29.51.jar \
 #     -O /workspace/final-lib/aws-sdk-bundle-2.29.51.jar
