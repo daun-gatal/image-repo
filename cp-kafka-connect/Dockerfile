@@ -50,7 +50,6 @@ RUN set -ex && \
     # ===================
     DEST="/build/iceberg-connect" && \
     MAVEN_REPO="https://repo1.maven.org/maven2" && \
-    
     # Delete all existing iceberg JARs
     rm -f ${DEST}/iceberg-*.jar && \
     
@@ -73,12 +72,8 @@ RUN set -ex && \
         wget -q "${MAVEN_REPO}/org/apache/iceberg/${module}/${ICEBERG_VERSION}/${module}-${ICEBERG_VERSION}.jar" \
             -O "${DEST}/${module}-${ICEBERG_VERSION}.jar"; \
     done && \
-    
-    # Download PostgreSQL JDBC
     wget -q "${MAVEN_REPO}/org/postgresql/postgresql/${POSTGRES_VERSION}/postgresql-${POSTGRES_VERSION}.jar" \
         -O "${DEST}/postgresql-${POSTGRES_VERSION}.jar" && \
-    
-    # Download Hadoop AWS
     wget -q "${MAVEN_REPO}/org/apache/hadoop/hadoop-aws/${HADOOP_AWS_VERSION}/hadoop-aws-${HADOOP_AWS_VERSION}.jar" \
         -O "${DEST}/hadoop-aws-${HADOOP_AWS_VERSION}.jar"
 
