@@ -41,15 +41,23 @@ RUN mkdir -p /build/iceberg-connect && \
     echo "========================================================="
 
 RUN set -ex && \
-    # =================== \
-    # Version definitions \
-    # =================== \
-    ICEBERG_VERSION=1.10.0 && \
-    HADOOP_AWS_VERSION=3.4.2 && \
-    POSTGRES_VERSION=42.7.8 && \
-    # =================== \
     DEST="/build/iceberg-connect" && \
     MAVEN_REPO="https://repo1.maven.org/maven2" && \
+    # =================== \
+    # Extract versions dynamically from existing JARs \
+    # =================== \
+    # Get Hadoop version from hadoop-common-*.jar \
+    HADOOP_VERSION=$(ls ${DEST}/hadoop-common-*.jar 2>/dev/null | sed 's/.*hadoop-common-\(.*\)\.jar/\1/' | head -1) && \
+    echo "Detected Hadoop version: ${HADOOP_VERSION}" && \
+    # Get AWS SDK version from aws-core-*.jar \
+    AWS_SDK_VERSION=$(ls ${DEST}/aws-core-*.jar 2>/dev/null | sed 's/.*aws-core-\(.*\)\.jar/\1/' | head -1) && \
+    echo "Detected AWS SDK version: ${AWS_SDK_VERSION}" && \
+    # Get PostgreSQL version from existing jar or use default \
+    POSTGRES_VERSION=42.7.8 && \
+    echo "Detected PostgreSQL version: ${POSTGRES_VERSION}" && \
+    # Get Iceberg version from iceberg-core-*.jar \
+    ICEBERG_VERSION=1.10.0 && \
+    echo "Detected Iceberg version: ${ICEBERG_VERSION}" && \
     # Delete all existing iceberg JARs \
     rm -f ${DEST}/iceberg-*.jar && \
     # Download Iceberg JARs \
@@ -71,12 +79,24 @@ RUN set -ex && \
         wget -q "${MAVEN_REPO}/org/apache/iceberg/${module}/${ICEBERG_VERSION}/${module}-${ICEBERG_VERSION}.jar" \
             -O "${DEST}/${module}-${ICEBERG_VERSION}.jar"; \
     done && \
-    # Download PostgreSQL JDBC \
-    wget -q "${MAVEN_REPO}/org/postgresql/postgresql/${POSTGRES_VERSION}/postgresql-${POSTGRES_VERSION}.jar" \
-        -O "${DEST}/postgresql-${POSTGRES_VERSION}.jar" && \
-    # Download Hadoop AWS \
-    wget -q "${MAVEN_REPO}/org/apache/hadoop/hadoop-aws/${HADOOP_AWS_VERSION}/hadoop-aws-${HADOOP_AWS_VERSION}.jar" \
-        -O "${DEST}/hadoop-aws-${HADOOP_AWS_VERSION}.jar"
+    # Download Hadoop AWS if not present \
+    if [ ! -f "${DEST}/hadoop-aws-${HADOOP_VERSION}.jar" ]; then \
+        echo "Downloading hadoop-aws-${HADOOP_VERSION}.jar" && \
+        wget -q "${MAVEN_REPO}/org/apache/hadoop/hadoop-aws/${HADOOP_VERSION}/hadoop-aws-${HADOOP_VERSION}.jar" \
+            -O "${DEST}/hadoop-aws-${HADOOP_VERSION}.jar"; \
+    fi && \
+    # Download S3 Transfer Manager if not present \
+    if [ ! -f "${DEST}/s3-transfer-manager-${AWS_SDK_VERSION}.jar" ]; then \
+        echo "Downloading s3-transfer-manager-${AWS_SDK_VERSION}.jar" && \
+        wget -q "${MAVEN_REPO}/software/amazon/awssdk/s3-transfer-manager/${AWS_SDK_VERSION}/s3-transfer-manager-${AWS_SDK_VERSION}.jar" \
+            -O "${DEST}/s3-transfer-manager-${AWS_SDK_VERSION}.jar"; \
+    fi && \
+    # Download PostgreSQL JDBC if not present \
+    if [ ! -f "${DEST}/postgresql-${POSTGRES_VERSION}.jar" ]; then \
+        echo "Downloading postgresql-${POSTGRES_VERSION}.jar" && \
+        wget -q "${MAVEN_REPO}/org/postgresql/postgresql/${POSTGRES_VERSION}/postgresql-${POSTGRES_VERSION}.jar" \
+            -O "${DEST}/postgresql-${POSTGRES_VERSION}.jar"; \
+    fi
 
 # =============================================================================
 # Runtime stage - Kafka Connect with Iceberg plugin
