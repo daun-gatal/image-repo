@@ -58,6 +58,27 @@ RUN set -ex && \
     # Get Iceberg version from iceberg-core-*.jar \
     ICEBERG_VERSION=1.10.0 && \
     echo "Detected Iceberg version: ${ICEBERG_VERSION}" && \
+    # Delete all existing iceberg JARs \
+    rm -f ${DEST}/iceberg-*.jar && \
+    # Download Iceberg JARs \
+    for module in \
+        iceberg-aws-bundle \
+        iceberg-api \
+        iceberg-bundled-guava \
+        iceberg-common \
+        iceberg-core \
+        iceberg-data \
+        iceberg-hive-metastore \
+        iceberg-kafka-connect \
+        iceberg-kafka-connect-events \
+        iceberg-kafka-connect-transforms \
+        iceberg-parquet \
+        iceberg-orc; \
+    do \
+        echo "Downloading ${module}-${ICEBERG_VERSION}.jar" && \
+        wget -q "${MAVEN_REPO}/org/apache/iceberg/${module}/${ICEBERG_VERSION}/${module}-${ICEBERG_VERSION}.jar" \
+            -O "${DEST}/${module}-${ICEBERG_VERSION}.jar"; \
+    done && \
     # Download Hadoop AWS if not present \
     if [ ! -f "${DEST}/hadoop-aws-${HADOOP_VERSION}.jar" ]; then \
         echo "Downloading hadoop-aws-${HADOOP_VERSION}.jar" && \
