@@ -25,10 +25,6 @@ RUN git clone --depth 1 https://github.com/apache/iceberg.git && \
 
 # Extract the connector runtime
 RUN mkdir -p /build/iceberg-connect && \
-    echo "=========================================================" && \
-    echo "ZIP FILES FOUND:" && \
-    ls -la /build/iceberg/kafka-connect/kafka-connect-runtime/build/distributions/ && \
-    echo "=========================================================" && \
     # Extract each zip file separately using shell loop
     for zip in /build/iceberg/kafka-connect/kafka-connect-runtime/build/distributions/*.zip; do \
         echo "Extracting: $zip"; \
@@ -42,16 +38,49 @@ RUN mkdir -p /build/iceberg-connect && \
     find /build/iceberg-connect -mindepth 2 -type f -exec mv {} /build/iceberg-connect/ \; 2>/dev/null || true && \
     # Also check for lib folders and move their contents
     find /build/iceberg-connect -type d -name "lib" -exec sh -c 'mv {}/* /build/iceberg-connect/' \; 2>/dev/null || true && \
-    echo "=========================================================" && \
-    echo "FINAL STRUCTURE:" && \
-    ls -la /build/iceberg-connect/ && \
-    echo "=========================================================" && \
-    echo "JAR COUNT: $(find /build/iceberg-connect -maxdepth 1 -name '*.jar' | wc -l)" && \
     echo "========================================================="
 
-# Download PostgreSQL JDBC driver
-RUN wget https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.8/postgresql-42.7.8.jar \
-    -O /build/iceberg-connect/postgresql-42.7.8.jar
+RUN set -ex && \
+    # ===================
+    # Version definitions
+    # ===================
+    ICEBERG_VERSION=1.10.0 && \
+    HADOOP_AWS_VERSION=3.4.2 && \
+    POSTGRES_VERSION=42.7.8 && \
+    # ===================
+    DEST="/build/iceberg-connect" && \
+    MAVEN_REPO="https://repo1.maven.org/maven2" && \
+    
+    # Delete all existing iceberg JARs
+    rm -f ${DEST}/iceberg-*.jar && \
+    
+    # Download Iceberg JARs
+    for module in \
+        iceberg-aws-bundle \
+        iceberg-api \
+        iceberg-bundled-guava \
+        iceberg-common \
+        iceberg-core \
+        iceberg-data \
+        iceberg-hive-metastore \
+        iceberg-kafka-connect \
+        iceberg-kafka-connect-events \
+        iceberg-kafka-connect-transforms \
+        iceberg-parquet \
+        iceberg-orc; \
+    do \
+        echo "Downloading ${module}-${ICEBERG_VERSION}.jar" && \
+        wget -q "${MAVEN_REPO}/org/apache/iceberg/${module}/${ICEBERG_VERSION}/${module}-${ICEBERG_VERSION}.jar" \
+            -O "${DEST}/${module}-${ICEBERG_VERSION}.jar"; \
+    done && \
+    
+    # Download PostgreSQL JDBC
+    wget -q "${MAVEN_REPO}/org/postgresql/postgresql/${POSTGRES_VERSION}/postgresql-${POSTGRES_VERSION}.jar" \
+        -O "${DEST}/postgresql-${POSTGRES_VERSION}.jar" && \
+    
+    # Download Hadoop AWS
+    wget -q "${MAVEN_REPO}/org/apache/hadoop/hadoop-aws/${HADOOP_AWS_VERSION}/hadoop-aws-${HADOOP_AWS_VERSION}.jar" \
+        -O "${DEST}/hadoop-aws-${HADOOP_AWS_VERSION}.jar"
 
 
 # =============================================================================
