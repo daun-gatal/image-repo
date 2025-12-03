@@ -42,6 +42,12 @@ RUN wget https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.8/postgre
     wget https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-hdfs-client/3.4.1/hadoop-hdfs-client-3.4.1.jar \
         -O /usr/share/java/iceberg-connect/hadoop-hdfs-client-3.4.1.jar && \
     wget https://repo1.maven.org/maven2/org/apache/hadoop/thirdparty/hadoop-shaded-guava/1.3.0/hadoop-shaded-guava-1.3.0.jar \
-        -O /usr/share/java/iceberg-connect/hadoop-shaded-guava-1.3.0.jar
+        -O /usr/share/java/iceberg-connect/hadoop-shaded-guava-1.3.0.jar && \
+    wget https://repo1.maven.org/maven2/org/apache/avro/avro/1.11.4/avro-1.11.4.jar \
+        -O /usr/share/java/iceberg-connect/avro-1.11.4.jar && \
+    wget https://repo1.maven.org/maven2/org/apache/commons/commons-configuration2/2.11.0/commons-configuration2-2.11.0.jar \
+        -O /usr/share/java/iceberg-connect/commons-configuration2-2.11.0.jar && \
+    wget https://repo1.maven.org/maven2/org/apache/commons/commons-text/1.13.0/commons-text-1.13.0.jar \
+        -O /usr/share/java/iceberg-connect/commons-text-1.13.0.jar
 
 ENV CONNECT_PLUGIN_PATH="/usr/share/java,/usr/share/java/iceberg-connect,/usr/share/confluent-hub-components,/usr/share/filestream-connectors"
