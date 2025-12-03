@@ -34,6 +34,8 @@ RUN wget https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.8/postgre
     wget https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-parquet/1.10.0/iceberg-parquet-1.10.0.jar \
         -O /usr/share/java/iceberg-connect/iceberg-parquet-1.10.0.jar && \
     wget https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-orc/1.10.0/iceberg-orc-1.10.0.jar \
-        -O /usr/share/java/iceberg-connect/iceberg-orc-1.10.0.jar
+        -O /usr/share/java/iceberg-connect/iceberg-orc-1.10.0.jar && \
+    wget https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.4.1/hadoop-aws-3.4.1.jar \
+        -O /usr/share/java/iceberg-connect/hadoop-aws-3.4.1.jar
 
 ENV CONNECT_PLUGIN_PATH="/usr/share/java,/usr/share/java/iceberg-connect,/usr/share/confluent-hub-components,/usr/share/filestream-connectors"
