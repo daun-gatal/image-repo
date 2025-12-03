@@ -49,6 +49,11 @@ RUN mkdir -p /build/iceberg-connect && \
     echo "JAR COUNT: $(find /build/iceberg-connect -maxdepth 1 -name '*.jar' | wc -l)" && \
     echo "========================================================="
 
+# Download PostgreSQL JDBC driver
+RUN wget https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.8/postgresql-42.7.8.jar \
+    -O /build/iceberg-connect/postgresql-42.7.8.jar
+
+
 # =============================================================================
 # Runtime stage - Kafka Connect with Iceberg plugin
 # =============================================================================
