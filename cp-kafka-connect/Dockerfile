@@ -41,19 +41,18 @@ RUN mkdir -p /build/iceberg-connect && \
     echo "========================================================="
 
 RUN set -ex && \
-    # ===================
-    # Version definitions
-    # ===================
+    # =================== \
+    # Version definitions \
+    # =================== \
     ICEBERG_VERSION=1.10.0 && \
     HADOOP_AWS_VERSION=3.4.2 && \
     POSTGRES_VERSION=42.7.8 && \
-    # ===================
+    # =================== \
     DEST="/build/iceberg-connect" && \
     MAVEN_REPO="https://repo1.maven.org/maven2" && \
-    # Delete all existing iceberg JARs
+    # Delete all existing iceberg JARs \
     rm -f ${DEST}/iceberg-*.jar && \
-    
-    # Download Iceberg JARs
+    # Download Iceberg JARs \
     for module in \
         iceberg-aws-bundle \
         iceberg-api \
@@ -72,11 +71,12 @@ RUN set -ex && \
         wget -q "${MAVEN_REPO}/org/apache/iceberg/${module}/${ICEBERG_VERSION}/${module}-${ICEBERG_VERSION}.jar" \
             -O "${DEST}/${module}-${ICEBERG_VERSION}.jar"; \
     done && \
+    # Download PostgreSQL JDBC \
     wget -q "${MAVEN_REPO}/org/postgresql/postgresql/${POSTGRES_VERSION}/postgresql-${POSTGRES_VERSION}.jar" \
         -O "${DEST}/postgresql-${POSTGRES_VERSION}.jar" && \
+    # Download Hadoop AWS \
     wget -q "${MAVEN_REPO}/org/apache/hadoop/hadoop-aws/${HADOOP_AWS_VERSION}/hadoop-aws-${HADOOP_AWS_VERSION}.jar" \
         -O "${DEST}/hadoop-aws-${HADOOP_AWS_VERSION}.jar"
-
 
 # =============================================================================
 # Runtime stage - Kafka Connect with Iceberg plugin
