@@ -62,7 +62,7 @@ RUN set -ex && \
     rm -f ${DEST}/iceberg-*.jar && \
     # Download Iceberg JARs \
     for module in \
-        iceberg-aws-bundle \
+        iceberg-aws \
         iceberg-api \
         iceberg-bundled-guava \
         iceberg-common \
