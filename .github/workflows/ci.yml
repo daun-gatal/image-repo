@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    permissions:
+      contents: read
+      packages: write
+    name: Build ${{ matrix.service }}
+    runs-on: self-hosted
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [airflow, pyspark, cp-kafka-connect]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check for changes
+        uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            src:
+              - '${{ matrix.service }}/Dockerfile'
+              - '${{ matrix.service }}/**/*'
+
+      # ======================================
+      # 🔍 Lint (Hadolint)
+      # ======================================
+      - name: Lint Dockerfile
+        if: steps.filter.outputs.src == 'true'
+        run: |
+          # Install hadolint if not present or use a docker container
+          # Since we are on a self-hosted runner which might be k8s, we can try running a docker container or download binary
+          # Given the previous CI used a binary, let's try to simulate that or run via docker
+          
+          echo "🔍 Running Hadolint on ${{ matrix.service }}/Dockerfile..."
+          # Using docker to run hadolint to avoid cluttering the runner
+          docker run --rm -i \
+            -v "$(pwd)/.hadolint.yaml:/.hadolint.yaml" \
+            hadolint/hadolint \
+            hadolint --config /.hadolint.yaml - < "${{ matrix.service }}/Dockerfile"
+
+      # ======================================
+      # 🧪 Validate (Docker Build - Dry Run)
+      # ======================================
+      - name: Validate Dockerfile
+        if: steps.filter.outputs.src == 'true' && github.event_name == 'pull_request'
+        run: |
+          VERSION=$(cat "${{ matrix.service }}/VERSION")
+          # Using a dummy image name for validation
+          IMAGE="validation/${{ matrix.service }}:${VERSION}"
+          echo "🧪 Validating Dockerfile for version ${VERSION}"
+          
+          docker build \
+             --no-cache \
+             --build-arg VERSION="${VERSION}" \
+             -t "${IMAGE}" \
+             "${{ matrix.service }}"
+          
+          echo "✅ Dockerfile validation succeeded for version ${IMAGE}"
+
+      # ======================================
+      # 🚀 Build & Push (Main Branch)
+      # ======================================
+      - name: Build and Push
+        if: steps.filter.outputs.src == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          # Assumes secrets are set in the repo
+          # Use GitHub Container Registry
+          CI_REGISTRY_USER: ${{ github.actor }}
+          CI_REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+          CI_REGISTRY: ghcr.io
+          # Image name must be lowercase
+          CI_REGISTRY_IMAGE: ghcr.io/${{ github.repository }}
+        run: |
+          echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+          
+          VERSION=$(cat "${{ matrix.service }}/VERSION")
+          # Construct full image path. Adjust if CI_REGISTRY_IMAGE includes/excludes groups
+          IMAGE="${CI_REGISTRY_IMAGE}/${{ matrix.service }}:${VERSION}"
+          
+          echo "🔨 Building ${IMAGE}"
+          docker build \
+            --no-cache \
+            --build-arg VERSION="${VERSION}" \
+            -t "${IMAGE}" \
+            "${{ matrix.service }}"
+          
+          echo "🚀 Pushing ${IMAGE}"
+          docker push "${IMAGE}"
