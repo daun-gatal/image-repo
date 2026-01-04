@@ -51,7 +51,9 @@ RUN curl -L -o ${SPARK_HOME}/jars/hadoop-aws-3.4.1.jar \
   curl -L -o ${SPARK_HOME}/jars/delta-storage-4.0.0.jar \
   https://repo1.maven.org/maven2/io/delta/delta-storage/4.0.0/delta-storage-4.0.0.jar && \
   curl -L -o ${SPARK_HOME}/jars/delta-spark_2.13-4.0.0.jar \
-  https://repo1.maven.org/maven2/io/delta/delta-spark_2.13/4.0.0/delta-spark_2.13-4.0.0.jar
+  https://repo1.maven.org/maven2/io/delta/delta-spark_2.13/4.0.0/delta-spark_2.13-4.0.0.jar && \
+  curl -L -o ${SPARK_HOME}/jars/aws-java-sdk-bundle-2.31.69.jar \
+  https://repo1.maven.org/maven2/software/amazon/awssdk/aws-java-sdk-bundle/2.31.69/aws-java-sdk-bundle-2.31.69.jar
 
 # Switch back to Spark user (UID 185)
 USER 185
