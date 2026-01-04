@@ -26,34 +26,40 @@ COPY scripts/ ${SPARK_HOME}/scripts/
 RUN chmod +x ${SPARK_HOME}/scripts/*.py || true
 
 # Download Spark connector JARs and dependencies
-RUN curl -L -o ${SPARK_HOME}/jars/hadoop-aws-3.4.1.jar \
+RUN \
+  # Hadoop & AWS Dependencies
+  curl -L -o ${SPARK_HOME}/jars/hadoop-aws-3.4.1.jar \
   https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.4.1/hadoop-aws-3.4.1.jar && \
-  curl -L -o ${SPARK_HOME}/jars/iceberg-spark-runtime-4.0_2.13-1.10.0.jar \
-  https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-spark-runtime-4.0_2.13/1.10.0/iceberg-spark-runtime-4.0_2.13-1.10.0.jar && \
-  curl -L -o ${SPARK_HOME}/jars/postgresql-42.7.3.jar \
-  https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.3/postgresql-42.7.3.jar && \
-  curl -L -o ${SPARK_HOME}/jars/spark-sql-kafka-0-10_2.13-4.0.1.jar \
-  https://repo1.maven.org/maven2/org/apache/spark/spark-sql-kafka-0-10_2.13/4.0.1/spark-sql-kafka-0-10_2.13-4.0.1.jar && \
-  curl -L -o ${SPARK_HOME}/jars/kafka-clients-3.9.1.jar \
-  https://repo1.maven.org/maven2/org/apache/kafka/kafka-clients/3.9.1/kafka-clients-3.9.1.jar && \
-  curl -L -o ${SPARK_HOME}/jars/commons-pool2-2.12.0.jar \
-  https://repo1.maven.org/maven2/org/apache/commons/commons-pool2/2.12.0/commons-pool2-2.12.0.jar && \
-  curl -L -o ${SPARK_HOME}/jars/spark-streaming-kafka-0-10_2.13-4.0.1.jar \
-  https://repo1.maven.org/maven2/org/apache/spark/spark-streaming-kafka-0-10_2.13/4.0.1/spark-streaming-kafka-0-10_2.13-4.0.1.jar && \
-  curl -L -o ${SPARK_HOME}/jars/spark-token-provider-kafka-0-10_2.13-4.0.1.jar \
-  https://repo1.maven.org/maven2/org/apache/spark/spark-token-provider-kafka-0-10_2.13/4.0.1/spark-token-provider-kafka-0-10_2.13-4.0.1.jar && \
-  curl -L -o ${SPARK_HOME}/jars/iceberg-aws-bundle-1.10.0.jar \
-  https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-aws-bundle/1.10.0/iceberg-aws-bundle-1.10.0.jar && \
+  curl -L -o ${SPARK_HOME}/jars/aws-java-sdk-bundle-2.31.69.jar \
+  https://repo1.maven.org/maven2/software/amazon/awssdk/aws-java-sdk-bundle/2.31.69/aws-java-sdk-bundle-2.31.69.jar && \
   curl -L -o ${SPARK_HOME}/jars/s3-2.31.69.jar \
   https://repo1.maven.org/maven2/software/amazon/awssdk/s3/2.31.69/s3-2.31.69.jar && \
   curl -L -o ${SPARK_HOME}/jars/s3-transfer-manager-2.31.69.jar \
   https://repo1.maven.org/maven2/software/amazon/awssdk/s3-transfer-manager/2.31.69/s3-transfer-manager-2.31.69.jar && \
+  # Iceberg Dependencies
+  curl -L -o ${SPARK_HOME}/jars/iceberg-spark-runtime-4.0_2.13-1.10.0.jar \
+  https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-spark-runtime-4.0_2.13/1.10.0/iceberg-spark-runtime-4.0_2.13-1.10.0.jar && \
+  curl -L -o ${SPARK_HOME}/jars/iceberg-aws-bundle-1.10.0.jar \
+  https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-aws-bundle/1.10.0/iceberg-aws-bundle-1.10.0.jar && \
+  # Delta Lake Dependencies
   curl -L -o ${SPARK_HOME}/jars/delta-storage-4.0.0.jar \
   https://repo1.maven.org/maven2/io/delta/delta-storage/4.0.0/delta-storage-4.0.0.jar && \
   curl -L -o ${SPARK_HOME}/jars/delta-spark_2.13-4.0.0.jar \
   https://repo1.maven.org/maven2/io/delta/delta-spark_2.13/4.0.0/delta-spark_2.13-4.0.0.jar && \
-  curl -L -o ${SPARK_HOME}/jars/aws-java-sdk-bundle-2.31.69.jar \
-  https://repo1.maven.org/maven2/software/amazon/awssdk/aws-java-sdk-bundle/2.31.69/aws-java-sdk-bundle-2.31.69.jar
+  # Database Dependencies
+  curl -L -o ${SPARK_HOME}/jars/postgresql-42.7.3.jar \
+  https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.3/postgresql-42.7.3.jar && \
+  curl -L -o ${SPARK_HOME}/jars/commons-pool2-2.12.0.jar \
+  https://repo1.maven.org/maven2/org/apache/commons/commons-pool2/2.12.0/commons-pool2-2.12.0.jar && \
+  # Kafka Dependencies
+  curl -L -o ${SPARK_HOME}/jars/spark-sql-kafka-0-10_2.13-4.0.1.jar \
+  https://repo1.maven.org/maven2/org/apache/spark/spark-sql-kafka-0-10_2.13/4.0.1/spark-sql-kafka-0-10_2.13-4.0.1.jar && \
+  curl -L -o ${SPARK_HOME}/jars/kafka-clients-3.9.1.jar \
+  https://repo1.maven.org/maven2/org/apache/kafka/kafka-clients/3.9.1/kafka-clients-3.9.1.jar && \
+  curl -L -o ${SPARK_HOME}/jars/spark-streaming-kafka-0-10_2.13-4.0.1.jar \
+  https://repo1.maven.org/maven2/org/apache/spark/spark-streaming-kafka-0-10_2.13/4.0.1/spark-streaming-kafka-0-10_2.13-4.0.1.jar && \
+  curl -L -o ${SPARK_HOME}/jars/spark-token-provider-kafka-0-10_2.13-4.0.1.jar \
+  https://repo1.maven.org/maven2/org/apache/spark/spark-token-provider-kafka-0-10_2.13/4.0.1/spark-token-provider-kafka-0-10_2.13-4.0.1.jar
 
 # Switch back to Spark user (UID 185)
 USER 185
