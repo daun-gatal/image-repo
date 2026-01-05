@@ -30,7 +30,6 @@ RUN \
   # Hadoop & AWS Dependencies
   curl -L -o ${SPARK_HOME}/jars/hadoop-aws-3.4.1.jar \
   https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.4.1/hadoop-aws-3.4.1.jar && \
-  
   curl -L -o ${SPARK_HOME}/jars/s3-2.31.69.jar \
   https://repo1.maven.org/maven2/software/amazon/awssdk/s3/2.31.69/s3-2.31.69.jar && \
   curl -L -o ${SPARK_HOME}/jars/s3-transfer-manager-2.31.69.jar \
