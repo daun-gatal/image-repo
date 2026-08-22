@@ -11,16 +11,8 @@ RUN apk add --no-cache \
     curl \
     wget \
     jq \
-    ca-certificates
-
-# GitHub CLI
-RUN curl -fsSL \
-      https://github.com/cli/cli/releases/latest/download/gh_linux_amd64.tar.gz \
-      -o /tmp/gh.tar.gz \
-    && tar -xzf /tmp/gh.tar.gz -C /tmp \
-    && cp /tmp/gh_*/bin/gh /usr/local/bin/gh \
-    && chmod 755 /usr/local/bin/gh \
-    && rm -rf /tmp/gh.tar.gz /tmp/gh_*
+    ca-certificates \
+    github-cli
 
 # Git HTTPS authentication helper.
 # Git calls this program when authentication is required.
