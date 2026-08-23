@@ -55,7 +55,7 @@ RUN opencode plugin @tarquinen/opencode-dcp@3.1.15 --global
 RUN opencode plugin @morphllm/opencode-morph-plugin@2.0.16 --global
 
 # 4. PTY
-RUN opencode plugin opencode-pty@0.3.6 --global
+# RUN opencode plugin opencode-pty@0.3.6 --global
 
 # 5. Skillful
 RUN opencode plugin @zenobius/opencode-skillful@1.2.5 --global
