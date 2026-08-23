@@ -105,6 +105,8 @@ RUN set -eux; \
 # ============================================================
 USER coder
 
+ENV PATH="/usr/local/bin:/usr/bin:/bin"
+
 WORKDIR /workspace
 
 ENTRYPOINT ["code-server"]
