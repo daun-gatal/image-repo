@@ -4,95 +4,130 @@ FROM codercom/code-server:${VERSION}
 USER root
 
 # ============================================================
-# Base tools
+# System dependencies
+#
+# Includes:
+#   - git
+#   - git-lfs
+#   - SSH client
+#   - bash
+#   - curl
+#   - wget
+#   - jq
+#   - CA certificates
+#   - gnupg
 # ============================================================
-RUN apt-get update && apt-get install -y \
-    git \
-    git-lfs \
-    openssh-client \
-    bash \
-    curl \
-    wget \
-    jq \
-    ca-certificates \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        git \
+        git-lfs \
+        openssh-client \
+        bash \
+        curl \
+        wget \
+        jq \
+        ca-certificates \
+        gnupg \
     && rm -rf /var/lib/apt/lists/*
 
 # ============================================================
 # GitHub CLI
 # ============================================================
-RUN type -p curl >/dev/null \
-    && curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
-        -o /usr/share/keyrings/githubcli-archive-keyring.gpg \
+RUN curl -fsSL \
+      https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+      -o /usr/share/keyrings/githubcli-archive-keyring.gpg \
     && chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
-        > /etc/apt/sources.list.d/github-cli.list \
+      > /etc/apt/sources.list.d/github-cli.list \
     && apt-get update \
-    && apt-get install -y gh \
+    && apt-get install -y --no-install-recommends gh \
     && rm -rf /var/lib/apt/lists/*
 
 # ============================================================
 # Docker CLI
 #
-# Only the Docker CLI is installed here.
-# The Docker daemon lives in the separate DinD deployment.
+# The Docker daemon is NOT installed here.
+#
+# Runtime:
+#   DOCKER_HOST=tcp://opencode-dind:2375
 # ============================================================
-ARG DOCKER_VERSION=27.5.1
-
 RUN curl -fsSL \
-        "https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz" \
-        -o /tmp/docker.tgz \
-    && tar -xzf /tmp/docker.tgz \
-        --strip-components=1 \
-        -C /usr/local/bin \
-        docker/docker \
-    && rm -f /tmp/docker.tgz \
-    && chmod 755 /usr/local/bin/docker
+      https://download.docker.com/linux/static/stable/x86_64/docker-27.5.1.tgz \
+      -o /tmp/docker.tgz \
+    && tar -xzf /tmp/docker.tgz -C /tmp \
+    && install -m 0755 /tmp/docker/docker /usr/local/bin/docker \
+    && rm -rf /tmp/docker /tmp/docker.tgz
 
 # ============================================================
 # OpenCode
-#
-# Install OpenCode system-wide so the `coder` user can find it.
 # ============================================================
 RUN curl -fsSL https://opencode.ai/install \
-        -o /tmp/install-opencode.sh \
-    && chmod +x /tmp/install-opencode.sh \
-    && /tmp/install-opencode.sh \
-    && OPENCODE_BIN="$(find /root /tmp -type f -name opencode -executable 2>/dev/null | head -n 1)" \
-    && test -n "$OPENCODE_BIN" \
-    && cp "$OPENCODE_BIN" /usr/local/bin/opencode \
-    && chmod 755 /usr/local/bin/opencode \
-    && rm -f /tmp/install-opencode.sh
+      | bash
 
 # ============================================================
-# Make system-wide binaries available
+# Make OpenCode globally available
+#
+# The installer may place OpenCode under:
+#   /root/.opencode/bin/opencode
+#
+# Put it in a standard PATH location.
 # ============================================================
-ENV PATH="/usr/local/bin:${PATH}"
+RUN if [ -x /root/.opencode/bin/opencode ]; then \
+      ln -sf /root/.opencode/bin/opencode /usr/local/bin/opencode; \
+    elif [ -x /root/.local/bin/opencode ]; then \
+      ln -sf /root/.local/bin/opencode /usr/local/bin/opencode; \
+    else \
+      echo "ERROR: OpenCode executable not found after installation"; \
+      find /root -type f -name opencode -print; \
+      exit 1; \
+    fi
 
 # ============================================================
-# Verify everything while building the image
+# Git HTTPS authentication helper
 # ============================================================
-RUN git --version \
-    && git-lfs --version \
-    && gh --version \
-    && docker --version \
-    && which opencode \
-    && opencode --version
+RUN cat > /usr/local/bin/git-askpass <<'EOF'
+#!/bin/sh
+
+case "$1" in
+  *Username*)
+    echo "x-access-token"
+    ;;
+  *Password*)
+    echo "$GITHUB_TOKEN"
+    ;;
+  *)
+    echo ""
+    ;;
+esac
+EOF
+
+RUN chmod 755 /usr/local/bin/git-askpass
 
 # ============================================================
-# Run as code-server user
+# Code-server user directories
+# ============================================================
+RUN mkdir -p \
+      /home/coder/.config \
+      /home/coder/.cache \
+      /home/coder/.local \
+      /home/coder/.ssh \
+    && chown -R coder:coder /home/coder
+
+# ============================================================
+# Verify everything during build
+# ============================================================
+RUN set -eux; \
+    git --version; \
+    git-lfs --version; \
+    gh --version; \
+    docker --version; \
+    opencode --version
+
+# ============================================================
+# Runtime user
 # ============================================================
 USER coder
 
 WORKDIR /workspace
-
-# ============================================================
-# Verify OpenCode is also available to the non-root user
-# ============================================================
-RUN which opencode \
-    && opencode --version \
-    && which docker \
-    && docker --version \
-    && which gh \
-    && git --version
 
 ENTRYPOINT ["code-server"]
