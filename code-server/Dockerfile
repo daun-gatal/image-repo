@@ -63,22 +63,22 @@ RUN curl -fsSL https://opencode.ai/install | bash \
 # ============================================================
 # Git HTTPS authentication helper
 # ============================================================
-RUN cat > /usr/local/bin/git-askpass <<'EOF'
-#!/bin/sh
-
-case "$1" in
-  *Username*)
-    echo "x-access-token"
-    ;;
-  *Password*)
-    echo "$GITHUB_TOKEN"
-    ;;
-  *)
-    echo ""
-    ;;
-esac
-EOF
-RUN chmod 755 /usr/local/bin/git-askpass
+RUN printf '%s\n' \
+    '#!/bin/sh' \
+    '' \
+    'case "$1" in' \
+    '  *Username*)' \
+    '    echo "x-access-token"' \
+    '    ;;' \
+    '  *Password*)' \
+    '    echo "$GITHUB_TOKEN"' \
+    '    ;;' \
+    '  *)' \
+    '    echo ""' \
+    '    ;;' \
+    'esac' \
+    > /usr/local/bin/git-askpass \
+    && chmod 755 /usr/local/bin/git-askpass
 
 # ============================================================
 # Code-server user directories
@@ -100,6 +100,9 @@ RUN set -eux; \
     docker --version; \
     opencode --version
 
+# ============================================================
+# Runtime
+# ============================================================
 USER coder
 
 WORKDIR /workspace
