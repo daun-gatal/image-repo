@@ -5,6 +5,8 @@ ARG VERSION
 # ============================================================
 FROM debian:bookworm-slim AS builder
 
+ARG VERSION
+
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # ============================================================
