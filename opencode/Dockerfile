@@ -1,11 +1,7 @@
 ARG VERSION
 
 # ============================================================
-# Stage 1: Builder
-#
-# Installs OpenCode + all requested plugins.
-# If a plugin is unavailable/incompatible, the Docker build
-# fails here rather than at container startup.
+# Stage 1: Plugin builder
 # ============================================================
 FROM ghcr.io/anomalyco/opencode:${VERSION} AS plugin-builder
 
@@ -23,7 +19,6 @@ RUN apk add --no-cache \
     github-cli \
     docker-cli
 
-# OpenCode runtime directories.
 RUN mkdir -p \
       /home/opencode/.config/opencode \
       /home/opencode/.cache/opencode \
@@ -37,67 +32,96 @@ ENV HOME=/home/opencode
 ENV XDG_CONFIG_HOME=/home/opencode/.config
 ENV XDG_CACHE_HOME=/home/opencode/.cache
 
-# ------------------------------------------------------------
-# Install all requested OpenCode plugins globally.
-#
-# We intentionally do NOT add @version here yet.
-# This lets OpenCode resolve the latest published package,
-# while the build itself validates whether it works with the
-# OpenCode version in this image.
-# ------------------------------------------------------------
+# Prevent proxy variables from interfering with plugin
+# installation during the image build.
+ENV HTTP_PROXY=
+ENV HTTPS_PROXY=
+ENV ALL_PROXY=
+ENV http_proxy=
+ENV https_proxy=
+ENV all_proxy=
 
-RUN opencode plugin opencode-vibeguard --global
+# ============================================================
+# Install all requested plugins
+# ============================================================
 
-RUN opencode plugin @tarquinen/opencode-dcp --global
+# 1. VibeGuard
+RUN opencode plugin opencode-vibeguard@0.1.0 --global
 
-RUN opencode plugin @morphllm/opencode-morph-plugin --global
+# 2. Dynamic Context Pruning
+RUN opencode plugin @tarquinen/opencode-dcp@3.1.15 --global
 
-RUN opencode plugin opencode-pty --global
+# 3. Morph
+RUN opencode plugin @morphllm/opencode-morph-plugin@2.0.16 --global
 
-RUN opencode plugin @zenobius/opencode-skillful --global
+# 4. PTY
+RUN opencode plugin opencode-pty@0.3.6 --global
 
-RUN opencode plugin opencode-supermemory --global
+# 5. Skillful
+RUN opencode plugin @zenobius/opencode-skillful@1.2.5 --global
 
-RUN opencode plugin opencode-worktree --global
+# 6. Supermemory
+RUN opencode plugin opencode-supermemory@2.0.12 --global
 
-RUN opencode plugin opencode-conductor --global
+# 7. Worktree
+# Original: opencode-worktree
+RUN opencode plugin @nevermore93/opencode-worktree@0.5.3 --global
 
-RUN opencode plugin opencode-scheduler --global
+# 8. Conductor
+# Original: opencode-conductor
+RUN opencode plugin opencode-conductor-plugin@1.32.0 --global
 
-RUN opencode plugin opencode-notify --global
+# 9. Scheduler
+RUN opencode plugin opencode-scheduler@1.3.0 --global
 
-RUN opencode plugin @franlol/opencode-md-table-formatter --global
+# 10. Notify
+# Original: opencode-notify
+RUN opencode plugin @freely01/opencode-notify@0.5.2 --global
 
-RUN opencode plugin @openspoon/subtask2 --global
+# 11. Markdown table formatter
+RUN opencode plugin @franlol/opencode-md-table-formatter@0.0.6 --global
 
-RUN opencode plugin opencode-goal-plugin --global
+# 12. Subtask2
+RUN opencode plugin @openspoon/subtask2@0.3.9 --global
 
-RUN opencode plugin opencode-websearch-cited --global
+# 13. Goal plugin
+# Original: opencode-goal-plugin
+RUN opencode plugin @prevalentware/opencode-goal-plugin@0.1.39 --global
 
-RUN opencode plugin @plannotator/opencode --global
+# 14. Web search with citations
+# Keep this LAST.
+RUN opencode plugin opencode-websearch-cited@1.2.0 --global
 
-RUN opencode plugin opencode-wakatime --global
+# 15. Plannotator
+# Original: @plannotator/opencode
+RUN opencode plugin @knownasred/plannotator-opencode@0.6.7 --global
 
-RUN opencode plugin opencode-zellij-namer --global
+# 16. WakaTime
+RUN opencode plugin opencode-wakatime@1.3.9 --global
 
-RUN opencode plugin @nick-vi/opencode-type-inject --global
+# 17. Zellij namer
+RUN opencode plugin opencode-zellij-namer@1.1.3 --global
 
-# ------------------------------------------------------------
-# Show the resulting configuration during build.
-# Useful for CI logs and debugging.
-# ------------------------------------------------------------
-RUN echo "===== OpenCode config =====" \
-    && cat /home/opencode/.config/opencode/opencode.json 2>/dev/null \
-       || cat /home/opencode/.config/opencode/opencode.jsonc 2>/dev/null \
-    && echo "===== Plugin cache =====" \
-    && find /home/opencode/.cache/opencode -maxdepth 2 -type d 2>/dev/null | sort
+# 18. Type inject
+RUN opencode plugin @nick-vi/opencode-type-inject@1.3.1 --global
+
+# ============================================================
+# Build-time diagnostics
+# ============================================================
+
+RUN echo "==================================================" \
+    && echo "OpenCode version" \
+    && opencode --version \
+    && echo "==================================================" \
+    && echo "Generated config" \
+    && cat /home/opencode/.config/opencode/opencode.jsonc \
+    && echo "==================================================" \
+    && echo "Installed plugin cache" \
+    && find /home/opencode/.cache/opencode -maxdepth 3 -type d | sort
 
 
 # ============================================================
 # Stage 2: Runtime
-#
-# Starts from a clean OpenCode image and copies only the
-# generated plugin/config/cache state from the builder.
 # ============================================================
 FROM ghcr.io/anomalyco/opencode:${VERSION}
 
@@ -115,7 +139,10 @@ RUN apk add --no-cache \
     github-cli \
     docker-cli
 
-# Git HTTPS authentication helper.
+# ============================================================
+# Git HTTPS authentication helper
+# ============================================================
+
 RUN cat > /usr/local/bin/git-askpass <<'EOF'
 #!/bin/sh
 case "$1" in
@@ -133,7 +160,10 @@ EOF
 
 RUN chmod 755 /usr/local/bin/git-askpass
 
-# OpenCode runtime directories.
+# ============================================================
+# OpenCode directories
+# ============================================================
+
 RUN mkdir -p \
       /home/opencode \
       /home/opencode/.config \
@@ -146,9 +176,9 @@ ENV HOME=/home/opencode
 ENV XDG_CONFIG_HOME=/home/opencode/.config
 ENV XDG_CACHE_HOME=/home/opencode/.cache
 
-# ------------------------------------------------------------
-# Copy globally installed OpenCode plugins/config from builder.
-# ------------------------------------------------------------
+# ============================================================
+# Copy plugin configuration/cache from builder
+# ============================================================
 
 COPY --from=plugin-builder \
     --chown=1000:1000 \
