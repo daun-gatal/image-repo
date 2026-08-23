@@ -3,19 +3,10 @@ FROM codercom/code-server:${VERSION}
 
 USER root
 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 # ============================================================
 # System dependencies
-#
-# Includes:
-#   - git
-#   - git-lfs
-#   - SSH client
-#   - bash
-#   - curl
-#   - wget
-#   - jq
-#   - CA certificates
-#   - gnupg
 # ============================================================
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -45,14 +36,11 @@ RUN curl -fsSL \
 
 # ============================================================
 # Docker CLI
-#
-# The Docker daemon is NOT installed here.
-#
-# Runtime:
-#   DOCKER_HOST=tcp://opencode-dind:2375
 # ============================================================
+ARG DOCKER_VERSION=27.5.1
+
 RUN curl -fsSL \
-      https://download.docker.com/linux/static/stable/x86_64/docker-27.5.1.tgz \
+      "https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz" \
       -o /tmp/docker.tgz \
     && tar -xzf /tmp/docker.tgz -C /tmp \
     && install -m 0755 /tmp/docker/docker /usr/local/bin/docker \
@@ -61,26 +49,16 @@ RUN curl -fsSL \
 # ============================================================
 # OpenCode
 # ============================================================
-RUN curl -fsSL https://opencode.ai/install \
-      | bash
-
-# ============================================================
-# Make OpenCode globally available
-#
-# The installer may place OpenCode under:
-#   /root/.opencode/bin/opencode
-#
-# Put it in a standard PATH location.
-# ============================================================
-RUN if [ -x /root/.opencode/bin/opencode ]; then \
-      ln -sf /root/.opencode/bin/opencode /usr/local/bin/opencode; \
-    elif [ -x /root/.local/bin/opencode ]; then \
-      ln -sf /root/.local/bin/opencode /usr/local/bin/opencode; \
-    else \
-      echo "ERROR: OpenCode executable not found after installation"; \
-      find /root -type f -name opencode -print; \
-      exit 1; \
-    fi
+RUN curl -fsSL https://opencode.ai/install | bash \
+    && if [[ -x /root/.opencode/bin/opencode ]]; then \
+         ln -sf /root/.opencode/bin/opencode /usr/local/bin/opencode; \
+       elif [[ -x /root/.local/bin/opencode ]]; then \
+         ln -sf /root/.local/bin/opencode /usr/local/bin/opencode; \
+       else \
+         echo "ERROR: OpenCode executable not found after installation"; \
+         find /root -type f -name opencode -print; \
+         exit 1; \
+       fi
 
 # ============================================================
 # Git HTTPS authentication helper
@@ -100,7 +78,6 @@ case "$1" in
     ;;
 esac
 EOF
-
 RUN chmod 755 /usr/local/bin/git-askpass
 
 # ============================================================
@@ -114,7 +91,7 @@ RUN mkdir -p \
     && chown -R coder:coder /home/coder
 
 # ============================================================
-# Verify everything during build
+# Verify installation
 # ============================================================
 RUN set -eux; \
     git --version; \
@@ -123,9 +100,6 @@ RUN set -eux; \
     docker --version; \
     opencode --version
 
-# ============================================================
-# Runtime user
-# ============================================================
 USER coder
 
 WORKDIR /workspace
