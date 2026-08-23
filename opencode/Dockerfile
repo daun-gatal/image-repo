@@ -12,7 +12,8 @@ RUN apk add --no-cache \
     wget \
     jq \
     ca-certificates \
-    github-cli
+    github-cli \
+    docker-cli
 
 # Git HTTPS authentication helper.
 # Git calls this program when authentication is required.
