@@ -51,14 +51,15 @@ RUN curl -fsSL \
 # ============================================================
 RUN curl -fsSL https://opencode.ai/install | bash \
     && if [[ -x /root/.opencode/bin/opencode ]]; then \
-         ln -sf /root/.opencode/bin/opencode /usr/local/bin/opencode; \
+         cp /root/.opencode/bin/opencode /usr/local/bin/opencode; \
        elif [[ -x /root/.local/bin/opencode ]]; then \
-         ln -sf /root/.local/bin/opencode /usr/local/bin/opencode; \
+         cp /root/.local/bin/opencode /usr/local/bin/opencode; \
        else \
          echo "ERROR: OpenCode executable not found after installation"; \
          find /root -type f -name opencode -print; \
          exit 1; \
-       fi
+       fi \
+    && chmod 755 /usr/local/bin/opencode
 
 # ============================================================
 # Git HTTPS authentication helper
