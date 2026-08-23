@@ -8,24 +8,33 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build:
-    permissions:
-      contents: read
-      packages: write
     name: Build ${{ matrix.service }}
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
+
     strategy:
       fail-fast: false
       matrix:
-        service: [airflow, pyspark, cp-kafka-connect, opencode]
+        service:
+          - airflow
+          - pyspark
+          - cp-kafka-connect
+          - opencode
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # ======================================
+      # 🔎 Check whether this service changed
+      # ======================================
       - name: Check for changes
-        uses: dorny/paths-filter@v2
+        uses: dorny/paths-filter@v3
         id: filter
         with:
           filters: |
@@ -34,67 +43,76 @@ jobs:
               - '${{ matrix.service }}/**/*'
 
       # ======================================
-      # 🔍 Lint (Hadolint)
+      # 📦 Read Version
+      # ======================================
+      - name: Read version
+        if: steps.filter.outputs.src == 'true'
+        id: version
+        run: |
+          VERSION=$(cat "${{ matrix.service }}/VERSION")
+
+          echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
+
+          echo "Service: ${{ matrix.service }}"
+          echo "Version: ${VERSION}"
+
+      # ======================================
+      # 🔍 Lint Dockerfile
       # ======================================
       - name: Lint Dockerfile
         if: steps.filter.outputs.src == 'true'
-        run: |
-          # Install hadolint if not present or use a docker container
-          # Since we are on a self-hosted runner which might be k8s, we can try running a docker container or download binary
-          # Given the previous CI used a binary, let's try to simulate that or run via docker
-          
-          echo "🔍 Running Hadolint on ${{ matrix.service }}/Dockerfile..."
-          # Using docker to run hadolint to avoid cluttering the runner
-          docker run --rm -i \
-            -v "$(pwd)/.hadolint.yaml:/.hadolint.yaml" \
-            hadolint/hadolint \
-            hadolint --config /.hadolint.yaml - < "${{ matrix.service }}/Dockerfile"
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: ${{ matrix.service }}/Dockerfile
+          config: .hadolint.yaml
 
       # ======================================
-      # 🧪 Validate (Docker Build - Dry Run)
+      # 🐳 Setup Docker Buildx
+      # ======================================
+      - name: Set up Docker Buildx
+        if: steps.filter.outputs.src == 'true'
+        uses: docker/setup-buildx-action@v3
+
+      # ======================================
+      # 🧪 Validate Dockerfile
       # ======================================
       - name: Validate Dockerfile
         if: steps.filter.outputs.src == 'true' && github.event_name == 'pull_request'
-        run: |
-          VERSION=$(cat "${{ matrix.service }}/VERSION")
-          # Using a dummy image name for validation
-          IMAGE="validation/${{ matrix.service }}:${VERSION}"
-          echo "🧪 Validating Dockerfile for version ${VERSION}"
-          
-          docker build \
-             --no-cache \
-             --build-arg VERSION="${VERSION}" \
-             -t "${IMAGE}" \
-             "${{ matrix.service }}"
-          
-          echo "✅ Dockerfile validation succeeded for version ${IMAGE}"
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.service }}
+          push: false
+          build-args: |
+            VERSION=${{ env.VERSION }}
+          tags: |
+            validation/${{ matrix.service }}:${{ env.VERSION }}
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
 
       # ======================================
-      # 🚀 Build & Push (Main Branch)
+      # 🔐 Login to GHCR
+      # ======================================
+      - name: Login to GHCR
+        if: steps.filter.outputs.src == 'true' && github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # ======================================
+      # 🚀 Build & Push
       # ======================================
       - name: Build and Push
         if: steps.filter.outputs.src == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
-        env:
-          # Assumes secrets are set in the repo
-          # Use GitHub Container Registry
-          CI_REGISTRY_USER: ${{ github.actor }}
-          CI_REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
-          CI_REGISTRY: ghcr.io
-          # Image name must be lowercase
-          CI_REGISTRY_IMAGE: ghcr.io/${{ github.repository }}
-        run: |
-          echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
-          
-          VERSION=$(cat "${{ matrix.service }}/VERSION")
-          # Construct full image path. Adjust if CI_REGISTRY_IMAGE includes/excludes groups
-          IMAGE="${CI_REGISTRY_IMAGE}/${{ matrix.service }}:${VERSION}"
-          
-          echo "🔨 Building ${IMAGE}"
-          docker build \
-            --no-cache \
-            --build-arg VERSION="${VERSION}" \
-            -t "${IMAGE}" \
-            "${{ matrix.service }}"
-          
-          echo "🚀 Pushing ${IMAGE}"
-          docker push "${IMAGE}"
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.service }}
+          push: true
+          build-args: |
+            VERSION=${{ env.VERSION }}
+          tags: |
+            ghcr.io/${{ github.repository }}/${{ matrix.service }}:${{ env.VERSION }}
+            ghcr.io/${{ github.repository }}/${{ matrix.service }}:latest
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
