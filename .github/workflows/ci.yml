@@ -25,6 +25,7 @@ jobs:
           - pyspark
           - cp-kafka-connect
           - opencode
+          - code-server
 
     steps:
       - name: Checkout
