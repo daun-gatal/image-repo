@@ -107,7 +107,7 @@ RUN opencode plugin @morphllm/opencode-morph-plugin@2.0.16 --global
 # RUN opencode plugin @zenobius/opencode-skillful@1.2.5 --global
 
 # 6. Supermemory
-RUN opencode plugin opencode-supermemory@2.0.12 --global
+# RUN opencode plugin opencode-supermemory@2.0.12 --global
 
 # 7. Worktree
 # Replacement for: opencode-worktree
