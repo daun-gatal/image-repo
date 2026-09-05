@@ -59,6 +59,7 @@ RUN set -eux; \
 FROM debian:bookworm-slim
 
 ARG DOCKER_VERSION=27.5.1
+ARG COMPOSE_VERSION=5.5.1
 ARG NODE_VERSION=22.23.2
 ARG UV_VERSION=0.12.7
 ARG GO_VERSION=1.27.0
@@ -112,6 +113,16 @@ RUN curl -fsSL \
         /tmp/docker/docker \
         /usr/local/bin/docker \
     && rm -rf /tmp/docker /tmp/docker.tgz
+
+# ============================================================
+# Docker Compose (CLI plugin)
+# ============================================================
+RUN curl -fsSL \
+      "https://github.com/docker/compose/releases/download/v${COMPOSE_VERSION}/docker-compose-linux-x86_64" \
+      -o /tmp/docker-compose \
+    && install -Dm 0755 /tmp/docker-compose \
+        /usr/local/lib/docker/cli-plugins/docker-compose \
+    && rm -f /tmp/docker-compose
 
 # ============================================================
 # Python toolchain
@@ -256,6 +267,7 @@ RUN set -eux; \
     git-lfs --version; \
     gh --version; \
     docker --version; \
+    docker compose version; \
     python3 --version; \
     pip3 --version; \
     uv --version; \

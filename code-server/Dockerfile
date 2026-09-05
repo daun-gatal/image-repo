@@ -38,6 +38,7 @@ RUN curl -fsSL \
 # Docker CLI
 # ============================================================
 ARG DOCKER_VERSION=27.5.1
+ARG COMPOSE_VERSION=5.5.1
 
 RUN curl -fsSL \
       "https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz" \
@@ -45,6 +46,16 @@ RUN curl -fsSL \
     && tar -xzf /tmp/docker.tgz -C /tmp \
     && install -m 0755 /tmp/docker/docker /usr/local/bin/docker \
     && rm -rf /tmp/docker /tmp/docker.tgz
+
+# ============================================================
+# Docker Compose (CLI plugin)
+# ============================================================
+RUN curl -fsSL \
+      "https://github.com/docker/compose/releases/download/v${COMPOSE_VERSION}/docker-compose-linux-x86_64" \
+      -o /tmp/docker-compose \
+    && install -Dm 0755 /tmp/docker-compose \
+        /usr/local/lib/docker/cli-plugins/docker-compose \
+    && rm -f /tmp/docker-compose
 
 # ============================================================
 # OpenCode
@@ -99,6 +110,7 @@ RUN set -eux; \
     git-lfs --version; \
     gh --version; \
     docker --version; \
+    docker compose version; \
     opencode --version
 
 # ============================================================
