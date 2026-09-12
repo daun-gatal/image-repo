@@ -39,6 +39,7 @@ RUN curl -fsSL \
 # ============================================================
 ARG DOCKER_VERSION=27.5.1
 ARG COMPOSE_VERSION=5.5.1
+ARG OPENCODE_VERSION=1.18.30
 
 RUN curl -fsSL \
       "https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz" \
@@ -60,7 +61,7 @@ RUN curl -fsSL \
 # ============================================================
 # OpenCode
 # ============================================================
-RUN curl -fsSL https://opencode.ai/install | bash \
+RUN curl -fsSL https://opencode.ai/install | bash -s -- --version "${OPENCODE_VERSION}" \
     && if [[ -x /root/.opencode/bin/opencode ]]; then \
          cp /root/.opencode/bin/opencode /usr/local/bin/opencode; \
        elif [[ -x /root/.local/bin/opencode ]]; then \
