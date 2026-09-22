@@ -26,26 +26,29 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # ============================================================
-# OpenCode (V2, installed as opencode2)
+# OpenCode (V2, real binary is named 'opencode'; add the
+# upstream-style 'opencode2' shim for side-by-side naming)
 # ============================================================
 RUN echo "Installing OpenCode ${VERSION}" \
-    && export OPENCODE_INSTALL_DIR=/usr/local/bin \
-    && curl -fsSL https://opencode.ai/v2/install \
-        | bash -s -- --version "${VERSION}" \
-    && if [ -x /usr/local/bin/opencode2 ]; then \
-         chmod 0755 /usr/local/bin/opencode2; \
-       else \
-         echo "ERROR: OpenCode executable not found after installation"; \
-         find /usr/local/bin /root -type f -name 'opencode*' -print; \
-         exit 1; \
-       fi
+    && curl -fsSL \
+        "https://registry.npmjs.org/@opencode/cli-linux-x64/-/cli-linux-x64-${VERSION}.tgz" \
+        -o /tmp/opencode.tgz \
+    && tar -xzf /tmp/opencode.tgz -C /tmp \
+    && install -m 0755 \
+        /tmp/package/bin/opencode \
+        /usr/local/bin/opencode \
+    && printf '#!/bin/sh\nexec "$(dirname "$0")/opencode" "$@"\n' \
+        > /usr/local/bin/opencode2 \
+    && chmod 0755 /usr/local/bin/opencode2 \
+    && rm -rf /tmp/package /tmp/opencode.tgz
 
 # ============================================================
 # Verify OpenCode
 # ============================================================
 RUN set -eux; \
+    opencode --version; \
     opencode2 --version; \
-    test "$(opencode2 --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)" = "${VERSION}"
+    test "$(opencode --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)" = "${VERSION}"
 
 
 # ============================================================
@@ -231,14 +234,16 @@ RUN printf '%s\n' \
     && chmod 755 /usr/local/bin/git-askpass
 
 # ============================================================
-# OpenCode binary (V2 installs as opencode2; keep the V1
-# command name working via symlink)
+# OpenCode binary (real V2 binary is named 'opencode';
+# opencode2 shim copied from builder)
 # ============================================================
+COPY --from=builder \
+    /usr/local/bin/opencode \
+    /usr/local/bin/opencode
+
 COPY --from=builder \
     /usr/local/bin/opencode2 \
     /usr/local/bin/opencode2
-
-RUN ln -s opencode2 /usr/local/bin/opencode
 
 # ============================================================
 # Runtime environment

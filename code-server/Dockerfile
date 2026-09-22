@@ -59,19 +59,20 @@ RUN curl -fsSL \
     && rm -f /tmp/docker-compose
 
 # ============================================================
-# OpenCode (V2, installed as opencode2; keep the V1 command
-# name working via symlink)
+# OpenCode (V2, real binary is named 'opencode'; add the
+# upstream-style 'opencode2' shim for side-by-side naming)
 # ============================================================
-RUN export OPENCODE_INSTALL_DIR=/usr/local/bin \
-    && curl -fsSL https://opencode.ai/v2/install | bash -s -- --version "${OPENCODE_VERSION}" \
-    && if [[ -x /usr/local/bin/opencode2 ]]; then \
-         chmod 755 /usr/local/bin/opencode2; \
-       else \
-         echo "ERROR: OpenCode executable not found after installation"; \
-         find /usr/local/bin /root -type f -name 'opencode*' -print; \
-         exit 1; \
-       fi \
-    && ln -s opencode2 /usr/local/bin/opencode
+RUN curl -fsSL \
+        "https://registry.npmjs.org/@opencode/cli-linux-x64/-/cli-linux-x64-${OPENCODE_VERSION}.tgz" \
+        -o /tmp/opencode.tgz \
+    && tar -xzf /tmp/opencode.tgz -C /tmp \
+    && install -m 0755 \
+        /tmp/package/bin/opencode \
+        /usr/local/bin/opencode \
+    && printf '#!/bin/sh\nexec "$(dirname "$0")/opencode" "$@"\n' \
+        > /usr/local/bin/opencode2 \
+    && chmod 755 /usr/local/bin/opencode2 \
+    && rm -rf /tmp/package /tmp/opencode.tgz
 
 # ============================================================
 # Git HTTPS authentication helper
