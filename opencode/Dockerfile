@@ -26,22 +26,17 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # ============================================================
-# OpenCode
+# OpenCode (V2, installed as opencode2)
 # ============================================================
 RUN echo "Installing OpenCode ${VERSION}" \
-    && curl -fsSL https://opencode.ai/install \
+    && export OPENCODE_INSTALL_DIR=/usr/local/bin \
+    && curl -fsSL https://opencode.ai/v2/install \
         | bash -s -- --version "${VERSION}" \
-    && if [ -x /root/.opencode/bin/opencode ]; then \
-         install -m 0755 \
-             /root/.opencode/bin/opencode \
-             /usr/local/bin/opencode; \
-       elif [ -x /root/.local/bin/opencode ]; then \
-         install -m 0755 \
-             /root/.local/bin/opencode \
-             /usr/local/bin/opencode; \
+    && if [ -x /usr/local/bin/opencode2 ]; then \
+         chmod 0755 /usr/local/bin/opencode2; \
        else \
          echo "ERROR: OpenCode executable not found after installation"; \
-         find /root -type f -name opencode -print; \
+         find /usr/local/bin /root -type f -name 'opencode*' -print; \
          exit 1; \
        fi
 
@@ -49,8 +44,8 @@ RUN echo "Installing OpenCode ${VERSION}" \
 # Verify OpenCode
 # ============================================================
 RUN set -eux; \
-    opencode --version; \
-    test "$(opencode --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)" = "${VERSION}"
+    opencode2 --version; \
+    test "$(opencode2 --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)" = "${VERSION}"
 
 
 # ============================================================
@@ -236,11 +231,14 @@ RUN printf '%s\n' \
     && chmod 755 /usr/local/bin/git-askpass
 
 # ============================================================
-# OpenCode binary
+# OpenCode binary (V2 installs as opencode2; keep the V1
+# command name working via symlink)
 # ============================================================
 COPY --from=builder \
-    /usr/local/bin/opencode \
-    /usr/local/bin/opencode
+    /usr/local/bin/opencode2 \
+    /usr/local/bin/opencode2
+
+RUN ln -s opencode2 /usr/local/bin/opencode
 
 # ============================================================
 # Runtime environment
@@ -257,7 +255,6 @@ ENV PIP_NO_INPUT=1
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 ENV PIP_BREAK_SYSTEM_PACKAGES=1
 ENV PYTHONDONTWRITEBYTECODE=1
-ENV BUN_RUNTIME_TRANSPILER_CACHE_PATH=0
 
 # ============================================================
 # Verify installation
@@ -277,7 +274,8 @@ RUN set -eux; \
     java -version; \
     javac -version; \
     mvn --version; \
-    opencode --version
+    opencode --version; \
+    opencode2 --version
 
 # ============================================================
 # OpenCode directories

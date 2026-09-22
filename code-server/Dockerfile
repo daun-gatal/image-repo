@@ -39,7 +39,7 @@ RUN curl -fsSL \
 # ============================================================
 ARG DOCKER_VERSION=27.5.1
 ARG COMPOSE_VERSION=5.5.1
-ARG OPENCODE_VERSION=1.18.30
+ARG OPENCODE_VERSION=2.0.14
 
 RUN curl -fsSL \
       "https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz" \
@@ -59,19 +59,19 @@ RUN curl -fsSL \
     && rm -f /tmp/docker-compose
 
 # ============================================================
-# OpenCode
+# OpenCode (V2, installed as opencode2; keep the V1 command
+# name working via symlink)
 # ============================================================
-RUN curl -fsSL https://opencode.ai/install | bash -s -- --version "${OPENCODE_VERSION}" \
-    && if [[ -x /root/.opencode/bin/opencode ]]; then \
-         cp /root/.opencode/bin/opencode /usr/local/bin/opencode; \
-       elif [[ -x /root/.local/bin/opencode ]]; then \
-         cp /root/.local/bin/opencode /usr/local/bin/opencode; \
+RUN export OPENCODE_INSTALL_DIR=/usr/local/bin \
+    && curl -fsSL https://opencode.ai/v2/install | bash -s -- --version "${OPENCODE_VERSION}" \
+    && if [[ -x /usr/local/bin/opencode2 ]]; then \
+         chmod 755 /usr/local/bin/opencode2; \
        else \
          echo "ERROR: OpenCode executable not found after installation"; \
-         find /root -type f -name opencode -print; \
+         find /usr/local/bin /root -type f -name 'opencode*' -print; \
          exit 1; \
        fi \
-    && chmod 755 /usr/local/bin/opencode
+    && ln -s opencode2 /usr/local/bin/opencode
 
 # ============================================================
 # Git HTTPS authentication helper
@@ -112,7 +112,8 @@ RUN set -eux; \
     gh --version; \
     docker --version; \
     docker compose version; \
-    opencode --version
+    opencode --version; \
+    opencode2 --version
 
 # ============================================================
 # Runtime
