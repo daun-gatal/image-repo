@@ -39,7 +39,7 @@ RUN curl -fsSL \
 # ============================================================
 ARG DOCKER_VERSION=27.5.1
 ARG COMPOSE_VERSION=5.5.1
-ARG OPENCODE_VERSION=1.18.30
+ARG OPENCODE_VERSION=2.0.14
 
 RUN curl -fsSL \
       "https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz" \
@@ -59,19 +59,20 @@ RUN curl -fsSL \
     && rm -f /tmp/docker-compose
 
 # ============================================================
-# OpenCode
+# OpenCode (V2, real binary is named 'opencode'; add the
+# upstream-style 'opencode2' shim for side-by-side naming)
 # ============================================================
-RUN curl -fsSL https://opencode.ai/install | bash -s -- --version "${OPENCODE_VERSION}" \
-    && if [[ -x /root/.opencode/bin/opencode ]]; then \
-         cp /root/.opencode/bin/opencode /usr/local/bin/opencode; \
-       elif [[ -x /root/.local/bin/opencode ]]; then \
-         cp /root/.local/bin/opencode /usr/local/bin/opencode; \
-       else \
-         echo "ERROR: OpenCode executable not found after installation"; \
-         find /root -type f -name opencode -print; \
-         exit 1; \
-       fi \
-    && chmod 755 /usr/local/bin/opencode
+RUN curl -fsSL \
+        "https://registry.npmjs.org/@opencode/cli-linux-x64/-/cli-linux-x64-${OPENCODE_VERSION}.tgz" \
+        -o /tmp/opencode.tgz \
+    && tar -xzf /tmp/opencode.tgz -C /tmp \
+    && install -m 0755 \
+        /tmp/package/bin/opencode \
+        /usr/local/bin/opencode \
+    && printf '#!/bin/sh\nexec "$(dirname "$0")/opencode" "$@"\n' \
+        > /usr/local/bin/opencode2 \
+    && chmod 755 /usr/local/bin/opencode2 \
+    && rm -rf /tmp/package /tmp/opencode.tgz
 
 # ============================================================
 # Git HTTPS authentication helper
@@ -112,7 +113,8 @@ RUN set -eux; \
     gh --version; \
     docker --version; \
     docker compose version; \
-    opencode --version
+    opencode --version; \
+    opencode2 --version
 
 # ============================================================
 # Runtime
